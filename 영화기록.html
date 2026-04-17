@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movie Mood Log</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; font-family: Inter, Pretendard, system-ui, sans-serif; background: #0b1020; color: #f8fafc; }
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(168,85,247,0.20), transparent 28%),
+        radial-gradient(circle at top right, rgba(59,130,246,0.16), transparent 24%),
+        radial-gradient(circle at bottom left, rgba(236,72,153,0.12), transparent 20%),
+        linear-gradient(135deg, #0b1020, #111827 50%, #1e1b4b);
+    }
+
+    .app {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 28px;
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 22px;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(18px);
+      border-radius: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.28);
+    }
+
+    .left {
+      padding: 22px;
+      position: sticky;
+      top: 18px;
+      height: fit-content;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .brand h1 { font-size: 1.45rem; margin: 0; }
+    .badge {
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #a855f7, #22d3ee);
+      color: #0f172a;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .sub { color: rgba(255,255,255,0.72); font-size: 0.93rem; line-height: 1.55; margin-bottom: 18px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .stat {
+      padding: 14px 12px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.05);
+      text-align: center;
+    }
+
+    .stat strong { display: block; font-size: 1.25rem; }
+    .stat span { font-size: 0.76rem; color: rgba(255,255,255,0.68); }
+
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 0.85rem; margin-bottom: 8px; color: rgba(255,255,255,0.8); }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.06);
+      color: white;
+      padding: 13px 14px;
+      border-radius: 16px;
+      outline: none;
+      font: inherit;
+    }
+
+    textarea { min-height: 120px; resize: vertical; }
+
+    .rating-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
+    .star-btn {
+      border: none;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.07);
+      color: #fbbf24;
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: transform .15s ease, background .15s ease;
+    }
+    .star-btn:hover, .star-btn.active { transform: translateY(-2px); background: rgba(251,191,36,0.14); }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 18px; }
+    button {
+      border: none; cursor: pointer; font: inherit;
+    }
+
+    .primary {
+      flex: 1;
+      padding: 14px 18px;
+      border-radius: 18px;
+      color: white;
+      font-weight: 800;
+      background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+    }
+
+    .secondary {
+      padding: 14px 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.08);
+      color: white;
+    }
+
+    .right { padding: 22px; }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .toolbar-left, .toolbar-right { display: flex; gap: 10px; flex-wrap: wrap; }
+    .search { min-width: 260px; }
+
+    .filters button {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.88);
+    }
+    .filters button.active { background: rgba(139,92,246,0.22); border: 1px solid rgba(168,85,247,0.35); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 16px;
+    }
+
+    .movie-card {
+      padding: 16px;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: transform .18s ease, box-shadow .18s ease;
+      cursor: pointer;
+    }
+    .movie-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.18); }
+
+    .poster {
+      height: 180px;
+      border-radius: 18px;
+      display: flex;
+      align-items: end;
+      padding: 14px;
+      font-weight: 800;
+      font-size: 1.08rem;
+      background: linear-gradient(135deg, rgba(99,102,241,0.45), rgba(236,72,153,0.35), rgba(34,211,238,0.25));
+      margin-bottom: 14px;
+      overflow: hidden;
+      position: relative;
+    }
+    .poster::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.5), transparent 60%);
+    }
+    .poster span { position: relative; z-index: 1; }
+
+    .meta {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .meta small { color: rgba(255,255,255,0.65); }
+    .stars { color: #fbbf24; letter-spacing: 1px; }
+
+    .review {
+      color: rgba(255,255,255,0.82);
+      font-size: 0.92rem;
+      line-height: 1.55;
+      min-height: 66px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .tag {
+      font-size: 0.74rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.82);
+    }
+
+    .empty {
+      padding: 56px 24px;
+      text-align: center;
+      color: rgba(255,255,255,0.68);
+      border: 1px dashed rgba(255,255,255,0.14);
+      border-radius: 24px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .modal {
+      position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+      background: rgba(3,7,18,0.66); padding: 20px; z-index: 20;
+    }
+    .modal.open { display: flex; }
+    .modal-card {
+      width: min(760px, 100%);
+      max-height: 88vh;
+      overflow: auto;
+      padding: 22px;
+      border-radius: 30px;
+      background: #0f172a;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    }
+
+    .modal-header { display: flex; justify-content: space-between; align-items: start; gap: 16px; margin-bottom: 14px; }
+    .close-btn { background: rgba(255,255,255,0.08); color: white; width: 42px; height: 42px; border-radius: 14px; }
+
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      .left { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="panel left">
+      <div class="brand">
+        <h1>🎬 Movie Mood Log</h1>
+        <div class="badge">MY CINEMA</div>
+      </div>
+      <div class="sub">내가 본 영화들을 기록하고, 별점이랑 한줄 후기부터 긴 감상까지 남길 수 있는 감성 영화 저널 앱.</div>
+
+      <div class="stats">
+        <div class="stat"><strong id="totalCount">0</strong><span>본 영화</span></div>
+        <div class="stat"><strong id="avgRating">0.0</strong><span>평균 별점</span></div>
+        <div class="stat"><strong id="favGenre">-</strong><span>최애 장르</span></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">영화 제목</label>
+        <input id="titleInput" placeholder="예: La La Land" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">장르</label>
+        <select id="genreInput">
+          <option value="드라마">드라마</option>
+          <option value="로맨스">로맨스</option>
+          <option value="스릴러">스릴러</option>
+          <option value="액션">액션</option>
+          <option value="SF">SF</option>
+          <option value="애니메이션">애니메이션</option>
+          <option value="공포">공포</option>
+          <option value="코미디">코미디</option>
+          <option value="다큐멘터리">다큐멘터리</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">감상 날짜</label>
+        <input id="dateInput" type="date" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">별점</label>
+        <div class="rating-wrap" id="starWrap"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">한줄 무드 / 후기</label>
+        <textarea id="reviewInput" placeholder="예: 영상미가 미쳤고 마지막 여운이 오래 남았다..."></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="primary" id="saveBtn">+ 영화 기록하기</button>
+        <button class="secondary" id="resetBtn">초기화</button>
+      </div>
+    </section>
+
+    <section class="panel right">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <input id="searchInput" class="search" placeholder="제목이나 후기 검색..." />
+          <select id="sortSelect">
+            <option value="latest">최신순</option>
+            <option value="rating">별점 높은순</option>
+            <option value="title">제목순</option>
+          </select>
+        </div>
+        <div class="toolbar-right filters" id="filterWrap">
+          <button class="active" data-filter="all">전체</button>
+          <button data-filter="favorites">⭐ 4점 이상</button>
+          <button data-filter="recent">이번 달</button>
+        </div>
+      </div>
+
+      <div id="movieGrid" class="grid"></div>
+    </section>
+  </div>
+
+  <div class="modal" id="detailModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h2 id="modalTitle" style="margin:0 0 6px 0"></h2>
+          <div id="modalMeta" style="color:rgba(255,255,255,0.72)"></div>
+        </div>
+        <button class="close-btn" onclick="closeModal()">✕</button>
+      </div>
+      <div id="modalPoster" class="poster" style="height:220px;"><span></span></div>
+      <div id="modalReview" style="line-height:1.8; color:rgba(255,255,255,0.9); margin-top:16px;"></div>
+      <div class="btn-row" style="margin-top:20px;">
+        <button class="secondary" id="deleteBtn">삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'movieMoodLogEntries';
+    let rating = 0;
+    let activeFilter = 'all';
+    let selectedId = null;
+
+    const titleInput = document.getElementById('titleInput');
+    const genreInput = document.getElementById('genreInput');
+    const dateInput = document.getElementById('dateInput');
+    const reviewInput = document.getElementById('reviewInput');
+    const movieGrid = document.getElementById('movieGrid');
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortSelect');
+    const starWrap = document.getElementById('starWrap');
+    const filterWrap = document.getElementById('filterWrap');
+    const detailModal = document.getElementById('detailModal');
+
+    const posters = [
+      'linear-gradient(135deg, rgba(99,102,241,0.45), rgba(236,72,153,0.35), rgba(34,211,238,0.25))',
+      'linear-gradient(135deg, rgba(244,63,94,0.45), rgba(251,191,36,0.30), rgba(59,130,246,0.25))',
+      'linear-gradient(135deg, rgba(16,185,129,0.40), rgba(59,130,246,0.28), rgba(139,92,246,0.30))',
+      'linear-gradient(135deg, rgba(168,85,247,0.45), rgba(14,165,233,0.30), rgba(251,113,133,0.28))'
+    ];
+
+    function seedIfEmpty() {
+      const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      if (current.length) return;
+      const sample = [
+        { id: crypto.randomUUID(), title: 'La La Land', genre: '로맨스', date: '2026-03-20', rating: 5, review: '색감, 음악, 엔딩까지 완벽. 보고 나면 괜히 밤 산책하고 싶어지는 영화.', poster: posters[0] },
+        { id: crypto.randomUUID(), title: 'Interstellar', genre: 'SF', date: '2026-03-12', rating: 5, review: '우주보다 감정이 더 크게 느껴졌음. 다시 봐도 압도된다.', poster: posters[2] },
+        { id: crypto.randomUUID(), title: 'Gone Girl', genre: '스릴러', date: '2026-02-28', rating: 4, review: '긴장감 미쳤고 전개가 너무 날카로움. 기분은 좀 찝찝하지만 재밌다.', poster: posters[1] }
+      ];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sample));
+    }
+
+    function getEntries() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+
+    function saveEntries(entries) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function renderStars() {
+      starWrap.innerHTML = '';
+      for (let i = 1; i <= 5; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'star-btn' + (i <= rating ? ' active' : '');
+        btn.textContent = '★';
+        btn.onclick = () => { rating = i; renderStars(); };
+        starWrap.appendChild(btn);
+      }
+    }
+
+    function formatStars(n) { return '★'.repeat(n) + '☆'.repeat(5 - n); }
+
+    function updateStats(entries) {
+      document.getElementById('totalCount').textContent = entries.length;
+      const avg = entries.length ? (entries.reduce((a,b) => a + b.rating, 0) / entries.length).toFixed(1) : '0.0';
+      document.getElementById('avgRating').textContent = avg;
+
+      const genreCount = {};
+      entries.forEach(e => genreCount[e.genre] = (genreCount[e.genre] || 0) + 1);
+      const fav = Object.entries(genreCount).sort((a,b) => b[1]-a[1])[0]?.[0] || '-';
+      document.getElementById('favGenre').textContent = fav;
+    }
+
+    function applyFilters(entries) {
+      const q = searchInput.value.trim().toLowerCase();
+      let filtered = [...entries];
+
+      if (q) {
+        filtered = filtered.filter(e =>
+          e.title.toLowerCase().includes(q) || e.review.toLowerCase().includes(q) || e.genre.toLowerCase().includes(q)
+        );
+      }
+
+      if (activeFilter === 'favorites') filtered = filtered.filter(e => e.rating >= 4);
+      if (activeFilter === 'recent') {
+        const now = new Date();
+        filtered = filtered.filter(e => {
+          const d = new Date(e.date);
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        });
+      }
+
+      if (sortSelect.value === 'latest') filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+      if (sortSelect.value === 'rating') filtered.sort((a,b) => b.rating - a.rating);
+      if (sortSelect.value === 'title') filtered.sort((a,b) => a.title.localeCompare(b.title));
+
+      return filtered;
+    }
+
+    function renderEntries() {
+      const entries = getEntries();
+      updateStats(entries);
+      const filtered = applyFilters(entries);
+
+      if (!filtered.length) {
+        movieGrid.innerHTML = `<div class="empty" style="grid-column:1/-1;">아직 조건에 맞는 영화 기록이 없어 🎞️<br/>왼쪽에서 첫 영화 후기를 남겨봐.</div>`;
+        return;
+      }
+
+      movieGrid.innerHTML = filtered.map(entry => `
+        <div class="movie-card" onclick="openModal('${entry.id}')">
+          <div class="poster" style="background:${entry.poster}"><span>${entry.title}</span></div>
+          <div class="meta">
+            <div>
+              <strong>${entry.title}</strong><br/>
+              <small>${entry.genre} · ${entry.date}</small>
+            </div>
+            <div class="stars">${formatStars(entry.rating)}</div>
+          </div>
+          <div class="review">${entry.review}</div>
+          <div class="tags">
+            <span class="tag">#${entry.genre}</span>
+            <span class="tag">#${entry.rating}점</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addEntry() {
+      const title = titleInput.value.trim();
+      const genre = genreInput.value;
+      const date = dateInput.value;
+      const review = reviewInput.value.trim();
+
+      if (!title || !date || !review || rating === 0) {
+        alert('제목, 날짜, 별점, 후기를 모두 입력해줘!');
+        return;
+      }
+
+      const entries = getEntries();
+      entries.unshift({
+        id: crypto.randomUUID(),
+        title,
+        genre,
+        date,
+        rating,
+        review,
+        poster: posters[Math.floor(Math.random() * posters.length)]
+      });
+
+      saveEntries(entries);
+      resetForm();
+      renderEntries();
+    }
+
+    function resetForm() {
+      titleInput.value = '';
+      genreInput.value = '드라마';
+      dateInput.value = '';
+      reviewInput.value = '';
+      rating = 0;
+      renderStars();
+    }
+
+    function openModal(id) {
+      const entry = getEntries().find(e => e.id === id);
+      if (!entry) return;
+      selectedId = id;
+      document.getElementById('modalTitle').textContent = entry.title;
+      document.getElementById('modalMeta').innerHTML = `${entry.genre} · ${entry.date} · <span class="stars">${formatStars(entry.rating)}</span>`;
+      document.querySelector('#modalPoster span').textContent = entry.title;
+      document.getElementById('modalPoster').style.background = entry.poster;
+      document.getElementById('modalReview').textContent = entry.review;
+      detailModal.classList.add('open');
+    }
+
+    function closeModal() {
+      detailModal.classList.remove('open');
+      selectedId = null;
+    }
+
+    function deleteSelected() {
+      if (!selectedId) return;
+      const ok = confirm('이 영화 기록을 삭제할까?');
+      if (!ok) return;
+      const entries = getEntries().filter(e => e.id !== selectedId);
+      saveEntries(entries);
+      closeModal();
+      renderEntries();
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', addEntry);
+    document.getElementById('resetBtn').addEventListener('click', resetForm);
+    searchInput.addEventListener('input', renderEntries);
+    sortSelect.addEventListener('change', renderEntries);
+    document.getElementById('deleteBtn').addEventListener('click', deleteSelected);
+
+    filterWrap.addEventListener('click', (e) => {
+      if (e.target.tagName !== 'BUTTON') return;
+      [...filterWrap.querySelectorAll('button')].forEach(btn => btn.classList.remove('active'));
+      e.target.classList.add('active');
+      activeFilter = e.target.dataset.filter;
+      renderEntries();
+    });
+
+    detailModal.addEventListener('click', (e) => {
+      if (e.target === detailModal) closeModal();
+    });
+
+    seedIfEmpty();
+    renderStars();
+    renderEntries();
+  </script>
+</body>
+</html>
