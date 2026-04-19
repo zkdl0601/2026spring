@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Academic Strategist v4</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #020617; --card: #1e293b; --primary: #38bdf8; --danger: #ef4444; --ai: #a855f7; --success: #10b981;
+        }
+        body { font-family: 'Pretendard', sans-serif; margin: 0; background: var(--bg); color: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* 사이드바 */
+        .sidebar { width: 420px; background: #0f172a; padding: 25px; overflow-y: auto; border-right: 1px solid #334155; flex-shrink: 0; }
+        .form-group { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #334155; }
+        label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #020617; background: #0f172a; color: white; box-sizing: border-box; margin-bottom: 10px; }
+        
+        /* 대시보드 */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+
+        .card { background: var(--card); border-radius: 16px; padding: 20px; border: 1px solid #334155; cursor: pointer; position: relative; transition: 0.3s; }
+        .card:hover { transform: translateY(-3px); border-color: var(--primary); }
+        .card.emergency { border: 2px solid var(--danger); box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+        
+        .type-tag { font-size: 0.7rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; display: inline-block; }
+        .tag-exam { background: #fca5a5; color: #7f1d1d; }
+        .tag-assignment { background: #93c5fd; color: #1e3a8a; }
+
+        /* 모달 레이아웃 */
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); }
+        .modal-content { background: var(--card); margin: 1% auto; width: 95%; max-width: 1200px; height: 95vh; border-radius: 20px; display: flex; overflow: hidden; }
+        .modal-left { flex: 1.4; padding: 25px; overflow-y: auto; border-right: 1px solid #444; }
+        .modal-right { flex: 1; display: flex; flex-direction: column; background: #0f172a; }
+
+        /* 기록창 스타일 */
+        .daily-log-box { background: #020617; padding: 15px; border-radius: 10px; margin-top: 20px; border: 1px solid var(--ai); }
+        .schedule-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; }
+        
+        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .bubble { padding: 10px 15px; border-radius: 12px; max-width: 85%; font-size: 0.9rem; line-height: 1.5; }
+        .ai { background: #3b82f61a; border-left: 4px solid var(--primary); align-self: flex-start; }
+        .user { background: #a855f71a; border-right: 4px solid var(--ai); align-self: flex-end; }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <h2><i class="fas fa-brain"></i> Academic AI v4</h2>
+    <div class="form-group">
+        <label>과목명</label><input type="text" id="subject" placeholder="과목명 입력">
+        
+        <label>유형 선택</label>
+        <select id="task_type">
+            <option value="exam">시험 (Exam)</option>
+            <option value="assignment">과제 (Assignment)</option>
+        </select>
+
+        <label>마감일/시험일</label><input type="date" id="deadline">
+        
+        <label>공부 스타일</label>
+        <select id="style">
+            <option value="normal">기본 (차근차근)</option>
+            <option value="blitz">벼락치기 (압축 전략)</option>
+        </select>
+
+        <label>시험 범위 (단원/페이지)</label>
+        <textarea id="exam_range" placeholder="예: 1~5단원, 연습문제 전체" rows="2"></textarea>
+
+        <label>시험 정보 및 팁</label>
+        <textarea id="exam_info" placeholder="예: 객관식 위주, 오픈북 아님" rows="2"></textarea>
+
+        <label>휴무일 설정</label>
+        <input type="date" id="off_day_input">
+        <button onclick="addOffDay()" style="width:100%; margin-bottom:5px;">휴무일 추가</button>
+        <div id="off_days_list" style="font-size:0.7rem; color:var(--primary); margin-bottom:10px;"></div>
+
+        <label>자료 업로드 (최대 20개)</label>
+        <input type="file" id="files" multiple>
+        
+        <button onclick="addPlan()" style="width:100%; padding:15px; background:var(--primary); font-weight:bold; border-radius:8px; cursor:pointer; color:black; margin-top:10px;">전략 리포트 생성</button>
+    </div>
+</aside>
+
+<main class="main-content">
+    <div id="dashboard" class="dashboard-grid"></div>
+</main>
+
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-left" id="modal-info"></div>
+        <div class="modal-right">
+            <div id="chat-box"></div>
+            <div style="padding:20px; border-top:1px solid #334155;">
+                <label style="color:var(--ai)">학습 기록 업데이트 (AI가 분석함)</label>
+                <textarea id="user-record" placeholder="오늘 공부한 구체적인 범위나 내용을 적어주세요..." rows="3" style="margin-top:10px;"></textarea>
+                <button onclick="updateWithAI()" style="width:100%; background:var(--ai); color:white; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;">기록 기반 계획 재설정</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let plans = JSON.parse(localStorage.getItem('ai_academic_v4')) || [];
+    let tempOffDays = [];
+    let currentId = null;
+
+    function addOffDay() {
+        const val = document.getElementById('off_day_input').value;
+        if(val && !tempOffDays.includes(val)) {
+            tempOffDays.push(val);
+            document.getElementById('off_days_list').innerText = "휴무: " + tempOffDays.join(', ');
+        }
+    }
+
+    function addPlan() {
+        const subject = document.getElementById('subject').value;
+        const deadline = document.getElementById('deadline').value;
+        if(!subject || !deadline) return alert("과목과 날짜는 필수입니다.");
+
+        const plan = {
+            id: Date.now(),
+            subject, deadline,
+            taskType: document.getElementById('task_type').value,
+            style: document.getElementById('style').value,
+            examRange: document.getElementById('exam_range').value,
+            examInfo: document.getElementById('exam_info').value,
+            offDays: [...tempOffDays],
+            files: Array.from(document.getElementById('files').files).map(f => f.name).slice(0, 20),
+            progress: 0,
+            dailySchedule: generateSchedule(deadline, tempOffDays, 10), // 기본 10단계 구성
+            chatHistory: []
+        };
+        plans.push(plan);
+        tempOffDays = [];
+        document.getElementById('off_days_list').innerText = "";
+        save();
+    }
+
+    function generateSchedule(deadline, offDays, steps) {
+        let schedule = [];
+        let curr = new Date();
+        curr.setHours(0,0,0,0);
+        const end = new Date(deadline);
+        let days = [];
+        while(curr <= end) {
+            days.push(new Date(curr).toISOString().split('T')[0]);
+            curr.setDate(curr.getDate() + 1);
+        }
+        const studyDays = days.filter(d => !offDays.includes(d));
+        const perDay = Math.ceil(steps / (studyDays.length || 1));
+        
+        let count = 0;
+        days.forEach(d => {
+            let task = offDays.includes(d) ? "🛋️ 휴무일" : (count < steps ? `단계 ${count+1}~${Math.min(count+perDay, steps)} 집중 학습` : "🔍 최종 마무리");
+            if(!offDays.includes(d)) count += perDay;
+            schedule.push({ date: d, task, isOff: offDays.includes(d), isDone: false });
+        });
+        return schedule;
+    }
+
+    function save() {
+        localStorage.setItem('ai_academic_v4', JSON.stringify(plans));
+        render();
+    }
+
+    function render() {
+        const db = document.getElementById('dashboard');
+        db.innerHTML = '';
+        plans.forEach(p => {
+            const diff = Math.ceil((new Date(p.deadline) - new Date()) / (1000*60*60*24));
+            const card = document.createElement('div');
+            card.className = `card ${diff <= 3 ? 'emergency' : ''}`;
+            card.onclick = () => openModal(p.id);
+            card.innerHTML = `
+                <span class="type-tag ${p.taskType === 'exam' ? 'tag-exam' : 'tag-assignment'}">${p.taskType}</span>
+                <h3 style="margin-top:0;">${p.subject}</h3>
+                <p style="font-size:0.8rem; color:#94a3b8;">D-${diff < 0 ? 'Passed' : diff} | 진척률: ${p.progress}%</p>
+                <div style="height:6px; background:#020617; border-radius:3px; margin-top:10px;">
+                    <div style="width:${p.progress}%; height:100%; background:var(--primary); border-radius:3px;"></div>
+                </div>
+            `;
+            db.appendChild(card);
+        });
+    }
+
+    function openModal(id) {
+        currentId = id;
+        const plan = plans.find(p => p.id === id);
+        const info = document.getElementById('modal-info');
+        
+        info.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:start;">
+                <h2>${plan.subject} <small>(${plan.taskType})</small></h2>
+                <button onclick="deletePlan(${plan.id})" style="background:none; border:none; color:var(--danger); cursor:pointer;">과목 삭제</button>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin:20px 0;">
+                <div class="form-group"><label>📍 시험 범위</label><div style="font-size:0.9rem;">${plan.examRange || '미지정'}</div></div>
+                <div class="form-group"><label>📜 시험 정보</label><div style="font-size:0.9rem;">${plan.examInfo || '미지정'}</div></div>
+            </div>
+            <h4>📅 일자별 상세 계획</h4>
+            <div id="schedule-list">
+                ${plan.dailySchedule.map(s => `
+                    <div class="schedule-item" style="display:flex; justify-content:space-between; ${s.isOff?'opacity:0.5':''}">
+                        <span><strong>${s.date}</strong>: ${s.task}</span>
+                        <input type="checkbox" ${s.isDone?'checked':''} onchange="toggleTask('${s.date}')">
+                    </div>
+                `).join('')}
+            </div>
+            <h4>📁 업로드 자료 (${plan.files.length}/20)</h4>
+            <div style="font-size:0.8rem; color:#94a3b8;">${plan.files.join(', ') || '없음'}</div>
+        `;
+
+        const chatBox = document.getElementById('chat-box');
+        chatBox.innerHTML = '<div class="bubble ai">오늘 학습한 내용을 아래에 기록해주시면, 남은 범위를 분석하여 내일부터의 계획을 다시 짜드릴게요!</div>';
+        plan.chatHistory.slice(-5).forEach(c => {
+            const div = document.createElement('div');
+            div.className = `bubble ${c.role}`;
+            div.innerText = c.text;
+            chatBox.appendChild(div);
+        });
+        document.getElementById('modal').style.display = "block";
+    }
+
+    function toggleTask(date) {
+        const plan = plans.find(p => p.id === currentId);
+        const t = plan.dailySchedule.find(s => s.date === date);
+        t.isDone = !t.isDone;
+        const done = plan.dailySchedule.filter(s => s.isDone).length;
+        plan.progress = Math.round((done / plan.dailySchedule.length) * 100);
+        save();
+        openModal(currentId);
+    }
+
+    // 기록 기반 리플래닝 엔진
+    function updateWithAI() {
+        const record = document.getElementById('user-record').value;
+        if(!record) return alert("오늘의 기록을 입력해주세요.");
+        
+        const plan = plans.find(p => p.id === currentId);
+        const today = new Date().toISOString().split('T')[0];
+        
+        // 시뮬레이션: AI가 기록을 분석하여 일정 재조정
+        let aiMsg = `기록을 분석했습니다: "${record}"... `;
+        if(record.includes("못했어") || record.includes("어려워")) {
+            aiMsg += "이해가 더 필요한 부분을 고려하여 내일 일정을 복습 중심으로 조정하고, 마감 직전 계획을 더 타이트하게 변경했습니다.";
+        } else {
+            aiMsg += "훌륭합니다! 남은 범위를 균등 배분하여 효율적인 스케줄로 업데이트했습니다.";
+        }
+
+        // 오늘 이후 일정 재계산
+        const remainingSteps = 10 - plan.dailySchedule.filter(s => s.isDone).length;
+        plan.dailySchedule = generateSchedule(plan.deadline, plan.offDays, remainingSteps);
+        
+        plan.chatHistory.push({role:'user', text: `[기록 업데이트] ${record}`}, {role:'ai', text: aiMsg});
+        document.getElementById('user-record').value = '';
+        save();
+        openModal(currentId);
+    }
+
+    function deletePlan(id) {
+        if(confirm("이 과목의 모든 기록을 삭제할까요?")) {
+            plans = plans.filter(p => p.id !== id);
+            save();
+            document.getElementById('modal').style.display = "none";
+        }
+    }
+
+    window.onclick = e => { if(e.target.className === 'modal') e.target.style.display="none"; }
+    render();
+</script>
+</body>
+</html>
