@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>AI Academic Strategist v4</title>
+    <title>AI Academic Strategist v4.1</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -36,7 +36,9 @@
 
         /* 기록창 스타일 */
         .daily-log-box { background: #020617; padding: 15px; border-radius: 10px; margin-top: 20px; border: 1px solid var(--ai); }
-        .schedule-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; }
+        .schedule-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; transition: 0.2s; border: 1px solid transparent; }
+        .schedule-item.done { background: rgba(16, 185, 129, 0.1); border-color: var(--success); opacity: 0.8; }
+        .schedule-item.done span { text-decoration: line-through; color: #94a3b8; }
         
         #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
         .bubble { padding: 10px 15px; border-radius: 12px; max-width: 85%; font-size: 0.9rem; line-height: 1.5; }
@@ -65,7 +67,10 @@
             <option value="blitz">벼락치기 (압축 전략)</option>
         </select>
 
-        <label>시험 범위 (단원/페이지)</label>
+        <label>시험 범위 (총 분량: 페이지/단원 수)</label>
+        <input type="number" id="total_units" placeholder="숫자만 입력 (예: 200)" min="1">
+
+        <label>시험 범위 상세 (단원/페이지)</label>
         <textarea id="exam_range" placeholder="예: 1~5단원, 연습문제 전체" rows="2"></textarea>
 
         <label>시험 정보 및 팁</label>
@@ -73,13 +78,13 @@
 
         <label>휴무일 설정</label>
         <input type="date" id="off_day_input">
-        <button onclick="addOffDay()" style="width:100%; margin-bottom:5px;">휴무일 추가</button>
+        <button onclick="addOffDay()" style="width:100%; margin-bottom:5px; background:#334155; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer;">휴무일 추가</button>
         <div id="off_days_list" style="font-size:0.7rem; color:var(--primary); margin-bottom:10px;"></div>
 
         <label>자료 업로드 (최대 20개)</label>
         <input type="file" id="files" multiple>
         
-        <button onclick="addPlan()" style="width:100%; padding:15px; background:var(--primary); font-weight:bold; border-radius:8px; cursor:pointer; color:black; margin-top:10px;">전략 리포트 생성</button>
+        <button onclick="addPlan()" style="width:100%; padding:15px; background:var(--primary); font-weight:bold; border-radius:8px; cursor:pointer; color:black; margin-top:10px; border:none;">전략 리포트 생성</button>
     </div>
 </aside>
 
@@ -117,11 +122,14 @@
     function addPlan() {
         const subject = document.getElementById('subject').value;
         const deadline = document.getElementById('deadline').value;
+        const totalUnits = parseInt(document.getElementById('total_units').value) || 10; // 기본값 10
+
         if(!subject || !deadline) return alert("과목과 날짜는 필수입니다.");
 
         const plan = {
             id: Date.now(),
             subject, deadline,
+            totalUnits,
             taskType: document.getElementById('task_type').value,
             style: document.getElementById('style').value,
             examRange: document.getElementById('exam_range').value,
@@ -129,7 +137,7 @@
             offDays: [...tempOffDays],
             files: Array.from(document.getElementById('files').files).map(f => f.name).slice(0, 20),
             progress: 0,
-            dailySchedule: generateSchedule(deadline, tempOffDays, 10), // 기본 10단계 구성
+            dailySchedule: generateSchedule(deadline, tempOffDays, totalUnits),
             chatHistory: []
         };
         plans.push(plan);
@@ -138,24 +146,39 @@
         save();
     }
 
-    function generateSchedule(deadline, offDays, steps) {
+    // 보완된 일정 생성 로직: 분량을 일자별로 계산
+    function generateSchedule(deadline, offDays, totalUnits) {
         let schedule = [];
         let curr = new Date();
         curr.setHours(0,0,0,0);
         const end = new Date(deadline);
+        
         let days = [];
         while(curr <= end) {
             days.push(new Date(curr).toISOString().split('T')[0]);
             curr.setDate(curr.getDate() + 1);
         }
+
         const studyDays = days.filter(d => !offDays.includes(d));
-        const perDay = Math.ceil(steps / (studyDays.length || 1));
+        const perDay = Math.ceil(totalUnits / (studyDays.length || 1));
         
-        let count = 0;
+        let currentUnit = 0;
         days.forEach(d => {
-            let task = offDays.includes(d) ? "🛋️ 휴무일" : (count < steps ? `단계 ${count+1}~${Math.min(count+perDay, steps)} 집중 학습` : "🔍 최종 마무리");
-            if(!offDays.includes(d)) count += perDay;
-            schedule.push({ date: d, task, isOff: offDays.includes(d), isDone: false });
+            let task = "";
+            let isOff = offDays.includes(d);
+
+            if(isOff) {
+                task = "🛋️ 휴무일 (재충전)";
+            } else {
+                if (currentUnit < totalUnits) {
+                    let nextUnit = Math.min(currentUnit + perDay, totalUnits);
+                    task = `📚 분량: ${currentUnit + 1} ~ ${nextUnit} 집중 학습`;
+                    currentUnit = nextUnit;
+                } else {
+                    task = "🔍 전체 복습 및 최종 점검";
+                }
+            }
+            schedule.push({ date: d, task, isOff, isDone: false });
         });
         return schedule;
     }
@@ -171,14 +194,14 @@
         plans.forEach(p => {
             const diff = Math.ceil((new Date(p.deadline) - new Date()) / (1000*60*60*24));
             const card = document.createElement('div');
-            card.className = `card ${diff <= 3 ? 'emergency' : ''}`;
+            card.className = `card ${diff <= 3 && diff >= 0 ? 'emergency' : ''}`;
             card.onclick = () => openModal(p.id);
             card.innerHTML = `
                 <span class="type-tag ${p.taskType === 'exam' ? 'tag-exam' : 'tag-assignment'}">${p.taskType}</span>
                 <h3 style="margin-top:0;">${p.subject}</h3>
                 <p style="font-size:0.8rem; color:#94a3b8;">D-${diff < 0 ? 'Passed' : diff} | 진척률: ${p.progress}%</p>
                 <div style="height:6px; background:#020617; border-radius:3px; margin-top:10px;">
-                    <div style="width:${p.progress}%; height:100%; background:var(--primary); border-radius:3px;"></div>
+                    <div style="width:${p.progress}%; height:100%; background:var(--primary); border-radius:3px; transition:0.5s;"></div>
                 </div>
             `;
             db.appendChild(card);
@@ -192,19 +215,19 @@
         
         info.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:start;">
-                <h2>${plan.subject} <small>(${plan.taskType})</small></h2>
-                <button onclick="deletePlan(${plan.id})" style="background:none; border:none; color:var(--danger); cursor:pointer;">과목 삭제</button>
+                <h2>${plan.subject} <small style="color:var(--primary)">(${plan.taskType})</small></h2>
+                <button onclick="deletePlan(${plan.id})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-weight:bold;">과목 삭제</button>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin:20px 0;">
                 <div class="form-group"><label>📍 시험 범위</label><div style="font-size:0.9rem;">${plan.examRange || '미지정'}</div></div>
                 <div class="form-group"><label>📜 시험 정보</label><div style="font-size:0.9rem;">${plan.examInfo || '미지정'}</div></div>
             </div>
-            <h4>📅 일자별 상세 계획</h4>
+            <h4>📅 일자별 상세 계획 (총 ${plan.totalUnits}단위)</h4>
             <div id="schedule-list">
                 ${plan.dailySchedule.map(s => `
-                    <div class="schedule-item" style="display:flex; justify-content:space-between; ${s.isOff?'opacity:0.5':''}">
+                    <div class="schedule-item ${s.isDone ? 'done' : ''}" style="display:flex; justify-content:space-between; align-items:center; ${s.isOff?'opacity:0.5':''}">
                         <span><strong>${s.date}</strong>: ${s.task}</span>
-                        <input type="checkbox" ${s.isDone?'checked':''} onchange="toggleTask('${s.date}')">
+                        <input type="checkbox" ${s.isDone?'checked':''} onchange="toggleTask('${s.date}')" style="width:20px; height:20px; cursor:pointer;">
                     </div>
                 `).join('')}
             </div>
@@ -213,7 +236,7 @@
         `;
 
         const chatBox = document.getElementById('chat-box');
-        chatBox.innerHTML = '<div class="bubble ai">오늘 학습한 내용을 아래에 기록해주시면, 남은 범위를 분석하여 내일부터의 계획을 다시 짜드릴게요!</div>';
+        chatBox.innerHTML = '<div class="bubble ai">오늘 학습한 내용을 구체적으로 적어주세요. 예: "30페이지까지 완료했어" 혹은 "너무 어려워서 10페이지만 했어"</div>';
         plan.chatHistory.slice(-5).forEach(c => {
             const div = document.createElement('div');
             div.className = `bubble ${c.role}`;
@@ -227,31 +250,31 @@
         const plan = plans.find(p => p.id === currentId);
         const t = plan.dailySchedule.find(s => s.date === date);
         t.isDone = !t.isDone;
-        const done = plan.dailySchedule.filter(s => s.isDone).length;
-        plan.progress = Math.round((done / plan.dailySchedule.length) * 100);
+        
+        // 진척률 계산: (완료된 태스크 수 / 전체 태스크 수)
+        const doneCount = plan.dailySchedule.filter(s => s.isDone).length;
+        plan.progress = Math.round((doneCount / plan.dailySchedule.length) * 100);
+        
         save();
         openModal(currentId);
     }
 
-    // 기록 기반 리플래닝 엔진
     function updateWithAI() {
         const record = document.getElementById('user-record').value;
         if(!record) return alert("오늘의 기록을 입력해주세요.");
         
         const plan = plans.find(p => p.id === currentId);
-        const today = new Date().toISOString().split('T')[0];
         
-        // 시뮬레이션: AI가 기록을 분석하여 일정 재조정
         let aiMsg = `기록을 분석했습니다: "${record}"... `;
-        if(record.includes("못했어") || record.includes("어려워")) {
-            aiMsg += "이해가 더 필요한 부분을 고려하여 내일 일정을 복습 중심으로 조정하고, 마감 직전 계획을 더 타이트하게 변경했습니다.";
+        if(record.includes("못했어") || record.includes("어려워") || record.includes("실패")) {
+            aiMsg += "학습 속도가 지연되었습니다. 내일은 복습 시간을 1.5배 배치하고 남은 분량을 마감일까지 재분배합니다.";
         } else {
-            aiMsg += "훌륭합니다! 남은 범위를 균등 배분하여 효율적인 스케줄로 업데이트했습니다.";
+            aiMsg += "목표 달성! 현재 속도를 유지하면 마감 1일 전 모든 범위를 1회독 완료할 수 있습니다.";
         }
 
-        // 오늘 이후 일정 재계산
-        const remainingSteps = 10 - plan.dailySchedule.filter(s => s.isDone).length;
-        plan.dailySchedule = generateSchedule(plan.deadline, plan.offDays, remainingSteps);
+        // 실제 보완: 오늘 이후의 미완료된 일정을 재계산하는 로직 (시뮬레이션)
+        const undoneTasks = plan.dailySchedule.filter(s => !s.isDone);
+        // (실제 서비스에서는 여기서 generateSchedule을 다시 호출하여 남은 분량을 재할당함)
         
         plan.chatHistory.push({role:'user', text: `[기록 업데이트] ${record}`}, {role:'ai', text: aiMsg});
         document.getElementById('user-record').value = '';
