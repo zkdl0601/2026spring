@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>AI Academic Strategist v4.1</title>
+    <title>AI Academic Strategist v4.4 - Full Integrated</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -20,13 +20,17 @@
         .main-content { flex: 1; padding: 30px; overflow-y: auto; }
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
 
-        .card { background: var(--card); border-radius: 16px; padding: 20px; border: 1px solid #334155; cursor: pointer; position: relative; transition: 0.3s; }
+        /* 카드 스타일 */
+        .card { background: var(--card); border-radius: 16px; padding: 20px; border: 1px solid #334155; cursor: pointer; position: relative; transition: 0.3s; overflow: hidden; }
         .card:hover { transform: translateY(-3px); border-color: var(--primary); }
-        .card.emergency { border: 2px solid var(--danger); box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
-        
-        .type-tag { font-size: 0.7rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; display: inline-block; }
-        .tag-exam { background: #fca5a5; color: #7f1d1d; }
-        .tag-assignment { background: #93c5fd; color: #1e3a8a; }
+        .card.blitz-mode { border-left: 6px solid var(--danger); }
+        .card.emergency { border: 2px solid var(--danger); animation: pulse-red 2s infinite; }
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.5); }
+        }
+
+        .emergency-badge { position: absolute; top: 15px; right: 15px; background: var(--danger); color: white; font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: bold; z-index: 5; }
 
         /* 모달 레이아웃 */
         .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); }
@@ -34,12 +38,12 @@
         .modal-left { flex: 1.4; padding: 25px; overflow-y: auto; border-right: 1px solid #444; }
         .modal-right { flex: 1; display: flex; flex-direction: column; background: #0f172a; }
 
-        /* 기록창 스타일 */
-        .daily-log-box { background: #020617; padding: 15px; border-radius: 10px; margin-top: 20px; border: 1px solid var(--ai); }
-        .schedule-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; transition: 0.2s; border: 1px solid transparent; }
-        .schedule-item.done { background: rgba(16, 185, 129, 0.1); border-color: var(--success); opacity: 0.8; }
-        .schedule-item.done span { text-decoration: line-through; color: #94a3b8; }
-        
+        /* 일정 아이템 */
+        .schedule-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; transition: 0.3s; border: 1px solid transparent; }
+        .schedule-item.done { background: rgba(16, 185, 129, 0.1); opacity: 0.6; }
+        .schedule-item.done strong, .schedule-item.done span { text-decoration: line-through; color: #94a3b8; }
+        .schedule-item.today { border-color: var(--primary); background: rgba(56, 189, 248, 0.05); }
+
         #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
         .bubble { padding: 10px 15px; border-radius: 12px; max-width: 85%; font-size: 0.9rem; line-height: 1.5; }
         .ai { background: #3b82f61a; border-left: 4px solid var(--primary); align-self: flex-start; }
@@ -64,16 +68,16 @@
         <label>공부 스타일</label>
         <select id="style">
             <option value="normal">기본 (차근차근)</option>
-            <option value="blitz">벼락치기 (압축 전략)</option>
+            <option value="blitz">벼락치기 (빨간색 & 타이트한 일정)</option>
         </select>
 
-        <label>시험 범위 (총 분량: 페이지/단원 수)</label>
-        <input type="number" id="total_units" placeholder="숫자만 입력 (예: 200)" min="1">
+        <label>전체 분량 (페이지 또는 단원 수)</label>
+        <input type="number" id="total_units" placeholder="숫자만 입력 (예: 200)">
 
-        <label>시험 범위 상세 (단원/페이지)</label>
+        <label>시험 범위 상세 (기록 유지됨)</label>
         <textarea id="exam_range" placeholder="예: 1~5단원, 연습문제 전체" rows="2"></textarea>
 
-        <label>시험 정보 및 팁</label>
+        <label>시험 정보 및 팁 (기록 유지됨)</label>
         <textarea id="exam_info" placeholder="예: 객관식 위주, 오픈북 아님" rows="2"></textarea>
 
         <label>휴무일 설정</label>
@@ -81,10 +85,7 @@
         <button onclick="addOffDay()" style="width:100%; margin-bottom:5px; background:#334155; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer;">휴무일 추가</button>
         <div id="off_days_list" style="font-size:0.7rem; color:var(--primary); margin-bottom:10px;"></div>
 
-        <label>자료 업로드 (최대 20개)</label>
-        <input type="file" id="files" multiple>
-        
-        <button onclick="addPlan()" style="width:100%; padding:15px; background:var(--primary); font-weight:bold; border-radius:8px; cursor:pointer; color:black; margin-top:10px; border:none;">전략 리포트 생성</button>
+        <button onclick="addPlan()" style="width:100%; padding:15px; background:var(--primary); font-weight:bold; border-radius:8px; cursor:pointer; color:black; border:none;">전략 리포트 생성</button>
     </div>
 </aside>
 
@@ -94,12 +95,13 @@
 
 <div id="modal" class="modal">
     <div class="modal-content">
-        <div class="modal-left" id="modal-info"></div>
+        <div class="modal-left" id="modal-info">
+            </div>
         <div class="modal-right">
             <div id="chat-box"></div>
             <div style="padding:20px; border-top:1px solid #334155;">
-                <label style="color:var(--ai)">학습 기록 업데이트 (AI가 분석함)</label>
-                <textarea id="user-record" placeholder="오늘 공부한 구체적인 범위나 내용을 적어주세요..." rows="3" style="margin-top:10px;"></textarea>
+                <label style="color:var(--ai)">학습 기록 업데이트</label>
+                <textarea id="user-record" placeholder="오늘 어디까지 공부했나요? (예: 45페이지 완료)" rows="3" style="margin-top:10px;"></textarea>
                 <button onclick="updateWithAI()" style="width:100%; background:var(--ai); color:white; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;">기록 기반 계획 재설정</button>
             </div>
         </div>
@@ -122,22 +124,22 @@
     function addPlan() {
         const subject = document.getElementById('subject').value;
         const deadline = document.getElementById('deadline').value;
-        const totalUnits = parseInt(document.getElementById('total_units').value) || 10; // 기본값 10
+        const totalUnits = parseInt(document.getElementById('total_units').value);
 
-        if(!subject || !deadline) return alert("과목과 날짜는 필수입니다.");
+        if(!subject || !deadline || !totalUnits) return alert("필수 정보를 모두 입력해주세요.");
 
         const plan = {
             id: Date.now(),
-            subject, deadline,
-            totalUnits,
+            subject, deadline, totalUnits,
+            completedUnit: 0,
             taskType: document.getElementById('task_type').value,
             style: document.getElementById('style').value,
             examRange: document.getElementById('exam_range').value,
             examInfo: document.getElementById('exam_info').value,
             offDays: [...tempOffDays],
-            files: Array.from(document.getElementById('files').files).map(f => f.name).slice(0, 20),
             progress: 0,
-            dailySchedule: generateSchedule(deadline, tempOffDays, totalUnits),
+            isEmergency: false,
+            dailySchedule: generateSchedule(deadline, tempOffDays, totalUnits, 0),
             chatHistory: []
         };
         plans.push(plan);
@@ -146,40 +148,40 @@
         save();
     }
 
-    // 보완된 일정 생성 로직: 분량을 일자별로 계산
-    function generateSchedule(deadline, offDays, totalUnits) {
+    function generateSchedule(deadline, offDays, totalAmount, startUnit) {
         let schedule = [];
-        let curr = new Date();
-        curr.setHours(0,0,0,0);
+        let curr = new Date(); curr.setHours(0,0,0,0);
         const end = new Date(deadline);
+        const todayStr = new Date().toISOString().split('T')[0];
         
-        let days = [];
-        while(curr <= end) {
-            days.push(new Date(curr).toISOString().split('T')[0]);
-            curr.setDate(curr.getDate() + 1);
+        let studyDays = [];
+        let temp = new Date(curr);
+        while(temp <= end) {
+            const dStr = temp.toISOString().split('T')[0];
+            if(!offDays.includes(dStr) && dStr >= todayStr) studyDays.push(dStr);
+            temp.setDate(temp.getDate() + 1);
         }
 
-        const studyDays = days.filter(d => !offDays.includes(d));
-        const perDay = Math.ceil(totalUnits / (studyDays.length || 1));
-        
-        let currentUnit = 0;
-        days.forEach(d => {
-            let task = "";
-            let isOff = offDays.includes(d);
+        const remaining = totalAmount - startUnit;
+        const perDay = Math.ceil(remaining / (studyDays.length || 1));
+        let pointer = startUnit;
 
-            if(isOff) {
-                task = "🛋️ 휴무일 (재충전)";
-            } else {
-                if (currentUnit < totalUnits) {
-                    let nextUnit = Math.min(currentUnit + perDay, totalUnits);
-                    task = `📚 분량: ${currentUnit + 1} ~ ${nextUnit} 집중 학습`;
-                    currentUnit = nextUnit;
-                } else {
-                    task = "🔍 전체 복습 및 최종 점검";
-                }
+        temp = new Date(curr);
+        while(temp <= end) {
+            const dStr = temp.toISOString().split('T')[0];
+            let task = "";
+            if (offDays.includes(dStr)) task = "🛋️ 휴식 및 재충전";
+            else if (dStr < todayStr) task = "✅ 이전 학습 완료";
+            else {
+                if (pointer < totalAmount) {
+                    let next = Math.min(pointer + perDay, totalAmount);
+                    task = `📚 범위: ${pointer + 1} ~ ${next} 집중 학습`;
+                    pointer = next;
+                } else task = "🔍 전체 복습 및 문제 풀이";
             }
-            schedule.push({ date: d, task, isOff, isDone: false });
-        });
+            schedule.push({ date: dStr, task, isDone: dStr < todayStr, isOff: offDays.includes(dStr) });
+            temp.setDate(temp.getDate() + 1);
+        }
         return schedule;
     }
 
@@ -194,14 +196,18 @@
         plans.forEach(p => {
             const diff = Math.ceil((new Date(p.deadline) - new Date()) / (1000*60*60*24));
             const card = document.createElement('div');
-            card.className = `card ${diff <= 3 && diff >= 0 ? 'emergency' : ''}`;
+            const isBlitz = p.style === 'blitz';
+            const isEmerg = diff <= 3 || p.isEmergency;
+
+            card.className = `card ${isBlitz ? 'blitz-mode' : ''} ${isEmerg ? 'emergency' : ''}`;
             card.onclick = () => openModal(p.id);
             card.innerHTML = `
-                <span class="type-tag ${p.taskType === 'exam' ? 'tag-exam' : 'tag-assignment'}">${p.taskType}</span>
-                <h3 style="margin-top:0;">${p.subject}</h3>
-                <p style="font-size:0.8rem; color:#94a3b8;">D-${diff < 0 ? 'Passed' : diff} | 진척률: ${p.progress}%</p>
+                ${isEmerg ? '<div class="emergency-badge">🚨 비상 상황</div>' : ''}
+                <span style="font-size:0.7rem; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">${p.taskType.toUpperCase()}</span>
+                <h3 style="margin: 10px 0 5px 0;">${p.subject}</h3>
+                <p style="font-size:0.8rem; color:#94a3b8; margin:0;">D-${diff < 0 ? 'Pass' : diff} | 진도: ${p.completedUnit}/${p.totalUnits}</p>
                 <div style="height:6px; background:#020617; border-radius:3px; margin-top:10px;">
-                    <div style="width:${p.progress}%; height:100%; background:var(--primary); border-radius:3px; transition:0.5s;"></div>
+                    <div style="width:${(p.completedUnit/p.totalUnits)*100}%; height:100%; background:${isBlitz ? 'var(--danger)' : 'var(--primary)'}; border-radius:3px; transition:0.5s;"></div>
                 </div>
             `;
             db.appendChild(card);
@@ -212,32 +218,40 @@
         currentId = id;
         const plan = plans.find(p => p.id === id);
         const info = document.getElementById('modal-info');
+        const todayStr = new Date().toISOString().split('T')[0];
         
+        // 기존 시험 정보와 범위를 상단에 그대로 유지
         info.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:start;">
-                <h2>${plan.subject} <small style="color:var(--primary)">(${plan.taskType})</small></h2>
+                <h2>${plan.subject} <small style="color:var(--primary)">(${plan.style === 'blitz' ? '벼락치기' : '일반'})</small></h2>
                 <button onclick="deletePlan(${plan.id})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-weight:bold;">과목 삭제</button>
             </div>
+            
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin:20px 0;">
-                <div class="form-group"><label>📍 시험 범위</label><div style="font-size:0.9rem;">${plan.examRange || '미지정'}</div></div>
-                <div class="form-group"><label>📜 시험 정보</label><div style="font-size:0.9rem;">${plan.examInfo || '미지정'}</div></div>
+                <div class="form-group">
+                    <label>📍 등록된 시험 범위</label>
+                    <div style="font-size:0.9rem; white-space:pre-wrap;">${plan.examRange || '미지정'}</div>
+                </div>
+                <div class="form-group">
+                    <label>📜 등록된 시험 정보</label>
+                    <div style="font-size:0.9rem; white-space:pre-wrap;">${plan.examInfo || '미지정'}</div>
+                </div>
             </div>
-            <h4>📅 일자별 상세 계획 (총 ${plan.totalUnits}단위)</h4>
+
+            <h4>📅 AI 실시간 조정 계획</h4>
             <div id="schedule-list">
                 ${plan.dailySchedule.map(s => `
-                    <div class="schedule-item ${s.isDone ? 'done' : ''}" style="display:flex; justify-content:space-between; align-items:center; ${s.isOff?'opacity:0.5':''}">
-                        <span><strong>${s.date}</strong>: ${s.task}</span>
-                        <input type="checkbox" ${s.isDone?'checked':''} onchange="toggleTask('${s.date}')" style="width:20px; height:20px; cursor:pointer;">
+                    <div class="schedule-item ${s.date === todayStr ? 'today' : ''} ${s.isDone ? 'done' : ''}" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span><strong>${s.date === todayStr ? '⭐ 오늘' : s.date}</strong>: ${s.task}</span>
+                        ${!s.isOff ? `<input type="checkbox" ${s.isDone?'checked':''} onchange="toggleTask('${s.date}')">` : ''}
                     </div>
                 `).join('')}
             </div>
-            <h4>📁 업로드 자료 (${plan.files.length}/20)</h4>
-            <div style="font-size:0.8rem; color:#94a3b8;">${plan.files.join(', ') || '없음'}</div>
         `;
 
         const chatBox = document.getElementById('chat-box');
-        chatBox.innerHTML = '<div class="bubble ai">오늘 학습한 내용을 구체적으로 적어주세요. 예: "30페이지까지 완료했어" 혹은 "너무 어려워서 10페이지만 했어"</div>';
-        plan.chatHistory.slice(-5).forEach(c => {
+        chatBox.innerHTML = '<div class="bubble ai">학습 기록을 분석하여 왼쪽의 계획표를 실시간으로 재구성합니다.</div>';
+        plan.chatHistory.slice(-3).forEach(c => {
             const div = document.createElement('div');
             div.className = `bubble ${c.role}`;
             div.innerText = c.text;
@@ -250,46 +264,37 @@
         const plan = plans.find(p => p.id === currentId);
         const t = plan.dailySchedule.find(s => s.date === date);
         t.isDone = !t.isDone;
-        
-        // 진척률 계산: (완료된 태스크 수 / 전체 태스크 수)
-        const doneCount = plan.dailySchedule.filter(s => s.isDone).length;
-        plan.progress = Math.round((doneCount / plan.dailySchedule.length) * 100);
-        
         save();
         openModal(currentId);
     }
 
     function updateWithAI() {
         const record = document.getElementById('user-record').value;
-        if(!record) return alert("오늘의 기록을 입력해주세요.");
-        
-        const plan = plans.find(p => p.id === currentId);
-        
-        let aiMsg = `기록을 분석했습니다: "${record}"... `;
-        if(record.includes("못했어") || record.includes("어려워") || record.includes("실패")) {
-            aiMsg += "학습 속도가 지연되었습니다. 내일은 복습 시간을 1.5배 배치하고 남은 분량을 마감일까지 재분배합니다.";
-        } else {
-            aiMsg += "목표 달성! 현재 속도를 유지하면 마감 1일 전 모든 범위를 1회독 완료할 수 있습니다.";
-        }
+        const matched = record.match(/\d+/);
+        if(!matched) return alert("진도 숫자(예: 50페이지)를 포함해주세요!");
 
-        // 실제 보완: 오늘 이후의 미완료된 일정을 재계산하는 로직 (시뮬레이션)
-        const undoneTasks = plan.dailySchedule.filter(s => !s.isDone);
-        // (실제 서비스에서는 여기서 generateSchedule을 다시 호출하여 남은 분량을 재할당함)
+        const plan = plans.find(p => p.id === currentId);
+        const completed = parseInt(matched[0]);
         
-        plan.chatHistory.push({role:'user', text: `[기록 업데이트] ${record}`}, {role:'ai', text: aiMsg});
+        // 권장 진도 대비 비상 여부 체크
+        const todayIdx = plan.dailySchedule.findIndex(s => s.date === new Date().toISOString().split('T')[0]);
+        const recommended = (plan.totalUnits / plan.dailySchedule.length) * (todayIdx + 1);
+
+        plan.completedUnit = completed;
+        plan.isEmergency = completed < recommended; 
+        plan.dailySchedule = generateSchedule(plan.deadline, plan.offDays, plan.totalUnits, completed);
+
+        const msg = plan.isEmergency 
+            ? `⚠️ 진도가 지연되어 비상 모드로 전환합니다. 남은 분량을 내일부터 타이트하게 재분배했습니다.`
+            : `✅ 아주 좋습니다! 남은 분량을 효율적으로 다시 쪼개어 계획표에 반영했습니다.`;
+
+        plan.chatHistory.push({role:'user', text: record}, {role:'ai', text: msg});
         document.getElementById('user-record').value = '';
         save();
-        openModal(currentId);
+        openModal(currentId); 
     }
 
-    function deletePlan(id) {
-        if(confirm("이 과목의 모든 기록을 삭제할까요?")) {
-            plans = plans.filter(p => p.id !== id);
-            save();
-            document.getElementById('modal').style.display = "none";
-        }
-    }
-
+    function deletePlan(id) { if(confirm("정말 삭제할까요?")) { plans = plans.filter(p=>p.id!==id); save(); document.getElementById('modal').style.display="none"; } }
     window.onclick = e => { if(e.target.className === 'modal') e.target.style.display="none"; }
     render();
 </script>
