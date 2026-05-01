@@ -2,77 +2,187 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>AI Academic Strategist v4.4 - Full Integrated</title>
+    <title>AI Academic Strategist v5.0 - Full Detailed</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --bg: #020617; --card: #1e293b; --primary: #38bdf8; --danger: #ef4444; --ai: #a855f7; --success: #10b981;
+            --bg: #020617; --card: #1e293b; --primary: #38bdf8; --danger: #ef4444; --ai: #a855f7; --success: #10b981; --warn: #f59e0b;
         }
-        body { font-family: 'Pretendard', sans-serif; margin: 0; background: var(--bg); color: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* 사이드바 */
-        .sidebar { width: 420px; background: #0f172a; padding: 25px; overflow-y: auto; border-right: 1px solid #334155; flex-shrink: 0; }
-        .form-group { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #334155; }
-        label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 5px; font-weight: bold; }
-        input, select, textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #020617; background: #0f172a; color: white; box-sizing: border-box; margin-bottom: 10px; }
-        
-        /* 대시보드 */
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; margin: 0; background: var(--bg); color: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
 
-        /* 카드 스타일 */
+        /* ===== SIDEBAR ===== */
+        .sidebar { width: 400px; background: #0f172a; padding: 20px; overflow-y: auto; border-right: 1px solid #334155; flex-shrink: 0; }
+        .sidebar h2 { margin: 0 0 18px; font-size: 1.1rem; color: var(--primary); }
+        .form-group { background: var(--card); padding: 14px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #334155; }
+        label { display: block; font-size: 0.78rem; color: #94a3b8; margin-bottom: 4px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.03em; }
+        input, select, textarea { width: 100%; padding: 9px 11px; border-radius: 6px; border: 1px solid #1e293b; background: #0f172a; color: white; margin-bottom: 10px; font-size: 0.85rem; transition: border 0.2s; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+        .btn { width: 100%; padding: 11px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: #020617; }
+        .btn-primary:hover { background: #7dd3fc; }
+        .btn-secondary { background: #334155; color: white; margin-bottom: 6px; }
+        .btn-secondary:hover { background: #475569; }
+
+        /* ===== MAIN ===== */
+        .main-content { flex: 1; padding: 28px; overflow-y: auto; }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .main-header h1 { margin: 0; font-size: 1.2rem; color: #f8fafc; }
+        .global-stats { display: flex; gap: 12px; }
+        .gstat { background: var(--card); padding: 8px 16px; border-radius: 8px; font-size: 0.78rem; color: #94a3b8; border: 1px solid #334155; }
+        .gstat strong { color: var(--primary); font-size: 1rem; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; }
+
+        /* ===== CARDS ===== */
         .card { background: var(--card); border-radius: 16px; padding: 20px; border: 1px solid #334155; cursor: pointer; position: relative; transition: 0.3s; overflow: hidden; }
-        .card:hover { transform: translateY(-3px); border-color: var(--primary); }
-        .card.blitz-mode { border-left: 6px solid var(--danger); }
+        .card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 8px 30px rgba(56,189,248,0.1); }
+        .card.blitz-mode { border-left: 5px solid var(--danger); }
         .card.emergency { border: 2px solid var(--danger); animation: pulse-red 2s infinite; }
         @keyframes pulse-red {
-            0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.5); }
+            0%,100% { box-shadow: 0 0 10px rgba(239,68,68,0.2); }
+            50% { box-shadow: 0 0 25px rgba(239,68,68,0.5); }
         }
+        .emergency-badge { position: absolute; top: 14px; right: 14px; background: var(--danger); color: white; font-size: 0.68rem; padding: 3px 9px; border-radius: 20px; font-weight: bold; }
+        .readiness-badge { position: absolute; bottom: 14px; right: 14px; font-size: 0.8rem; font-weight: bold; padding: 4px 10px; border-radius: 8px; }
+        .grade-A { background: rgba(16,185,129,0.2); color: var(--success); }
+        .grade-B { background: rgba(56,189,248,0.2); color: var(--primary); }
+        .grade-C { background: rgba(245,158,11,0.2); color: var(--warn); }
+        .grade-D { background: rgba(239,68,68,0.2); color: var(--danger); }
+        .grade-F { background: rgba(239,68,68,0.4); color: #fca5a5; }
 
-        .emergency-badge { position: absolute; top: 15px; right: 15px; background: var(--danger); color: white; font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: bold; z-index: 5; }
-
-        /* 모달 레이아웃 */
+        /* ===== MODAL ===== */
         .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); }
-        .modal-content { background: var(--card); margin: 1% auto; width: 95%; max-width: 1200px; height: 95vh; border-radius: 20px; display: flex; overflow: hidden; }
-        .modal-left { flex: 1.4; padding: 25px; overflow-y: auto; border-right: 1px solid #444; }
-        .modal-right { flex: 1; display: flex; flex-direction: column; background: #0f172a; }
+        .modal-content { background: var(--card); margin: 1% auto; width: 96%; max-width: 1300px; height: 96vh; border-radius: 20px; display: flex; overflow: hidden; }
+        .modal-left { flex: 1.5; padding: 24px; overflow-y: auto; border-right: 1px solid #334155; }
+        .modal-right { flex: 1; display: flex; flex-direction: column; background: #0f172a; min-width: 0; }
 
-        /* 일정 아이템 */
-        .schedule-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; transition: 0.3s; border: 1px solid transparent; }
-        .schedule-item.done { background: rgba(16, 185, 129, 0.1); opacity: 0.6; }
-        .schedule-item.done strong, .schedule-item.done span { text-decoration: line-through; color: #94a3b8; }
-        .schedule-item.today { border-color: var(--primary); background: rgba(56, 189, 248, 0.05); }
+        /* ===== TABS ===== */
+        .tab-bar { display: flex; gap: 4px; padding: 14px 14px 0; border-bottom: 1px solid #334155; background: #0f172a; flex-shrink: 0; }
+        .tab { padding: 8px 14px; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 0.8rem; color: #64748b; border: 1px solid transparent; border-bottom: none; transition: 0.2s; white-space: nowrap; }
+        .tab.active { background: var(--card); color: var(--primary); border-color: #334155; }
+        .tab-content { display: none; flex: 1; overflow-y: auto; }
+        .tab-content.active { display: flex; flex-direction: column; }
 
-        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .bubble { padding: 10px 15px; border-radius: 12px; max-width: 85%; font-size: 0.9rem; line-height: 1.5; }
+        /* ===== SCHEDULE ===== */
+        .schedule-item { background: rgba(255,255,255,0.04); padding: 11px 14px; border-radius: 8px; margin-bottom: 7px; font-size: 0.88rem; transition: 0.2s; border: 1px solid transparent; cursor: pointer; }
+        .schedule-item:hover { background: rgba(56,189,248,0.06); border-color: #334155; }
+        .schedule-item.done { background: rgba(16,185,129,0.08); opacity: 0.6; }
+        .schedule-item.done strong, .schedule-item.done .si-task { text-decoration: line-through; color: #94a3b8; }
+        .schedule-item.today { border-color: var(--primary); background: rgba(56,189,248,0.06); }
+        .schedule-item.off { opacity: 0.4; cursor: default; }
+        .si-row { display: flex; justify-content: space-between; align-items: center; }
+        .si-task { font-size: 0.85rem; color: #cbd5e1; margin-top: 3px; }
+        .si-memo { font-size: 0.75rem; color: #64748b; margin-top: 4px; font-style: italic; }
+        .si-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+        /* ===== CHAT ===== */
+        #chat-box { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+        .bubble { padding: 10px 14px; border-radius: 12px; max-width: 88%; font-size: 0.88rem; line-height: 1.55; white-space: pre-wrap; }
         .ai { background: #3b82f61a; border-left: 4px solid var(--primary); align-self: flex-start; }
         .user { background: #a855f71a; border-right: 4px solid var(--ai); align-self: flex-end; }
+        .sys { background: rgba(16,185,129,0.08); border-left: 4px solid var(--success); align-self: flex-start; font-size: 0.8rem; color: #94a3b8; }
+
+        /* ===== STAT CARDS in modal ===== */
+        .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+        .stat-box { background: #0f172a; border-radius: 10px; padding: 12px 14px; border: 1px solid #334155; text-align: center; }
+        .stat-box .sv { font-size: 1.4rem; font-weight: bold; color: var(--primary); }
+        .stat-box .sk { font-size: 0.72rem; color: #64748b; margin-top: 3px; }
+
+        /* ===== TODAY MISSION PANEL ===== */
+        .today-mission { background: linear-gradient(135deg, rgba(56,189,248,0.08), rgba(168,85,247,0.08)); border: 1px solid rgba(56,189,248,0.3); border-radius: 12px; padding: 16px; margin-bottom: 18px; }
+        .today-mission h4 { margin: 0 0 10px; color: var(--primary); font-size: 0.9rem; }
+        .time-block { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.83rem; }
+        .time-block:last-child { border-bottom: none; }
+        .time-label { color: var(--warn); font-weight: bold; min-width: 70px; font-size: 0.78rem; }
+
+        /* ===== TIMER ===== */
+        .timer-panel { padding: 16px; text-align: center; }
+        .timer-display { font-size: 3rem; font-weight: bold; color: var(--primary); font-variant-numeric: tabular-nums; letter-spacing: 2px; margin: 10px 0; }
+        .timer-label { font-size: 0.8rem; color: #64748b; margin-bottom: 14px; }
+        .timer-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        .timer-btn { padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
+        .timer-progress { height: 6px; background: #334155; border-radius: 3px; margin: 12px 0; overflow: hidden; }
+        .timer-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 1s linear; }
+        .session-counter { font-size: 0.78rem; color: #64748b; margin-top: 8px; }
+
+        /* ===== DETAIL POPUP ===== */
+        .detail-popup { display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
+        .detail-popup-content { background: #1e293b; margin: 5% auto; width: 90%; max-width: 580px; border-radius: 16px; padding: 28px; border: 1px solid #334155; position: relative; }
+        .detail-popup-content h3 { margin: 0 0 16px; color: var(--primary); }
+        .strategy-block { background: #0f172a; border-radius: 8px; padding: 13px; margin-bottom: 10px; border-left: 3px solid var(--primary); font-size: 0.87rem; line-height: 1.6; }
+        .strategy-block .s-title { color: var(--warn); font-weight: bold; margin-bottom: 6px; font-size: 0.82rem; text-transform: uppercase; }
+        .memo-input { width: 100%; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 6px; padding: 9px; font-size: 0.85rem; margin-top: 10px; resize: vertical; }
+        .close-btn { position: absolute; top: 16px; right: 18px; background: none; border: none; color: #64748b; font-size: 1.4rem; cursor: pointer; }
+        .close-btn:hover { color: white; }
+
+        /* ===== HISTORY LOG ===== */
+        .log-item { background: #0f172a; border-radius: 8px; padding: 11px 14px; margin-bottom: 8px; border-left: 3px solid #334155; font-size: 0.83rem; }
+        .log-item .log-time { color: #64748b; font-size: 0.75rem; margin-bottom: 4px; }
+        .log-item .log-body { color: #cbd5e1; line-height: 1.5; }
+        .log-item.log-good { border-left-color: var(--success); }
+        .log-item.log-warn { border-left-color: var(--warn); }
+        .log-item.log-danger { border-left-color: var(--danger); }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+        /* ===== PROGRESS BAR ===== */
+        .prog-bar { height: 6px; background: #020617; border-radius: 3px; margin-top: 10px; overflow: hidden; }
+        .prog-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+
+        /* ===== READINESS ===== */
+        .readiness-panel { background: #0f172a; border-radius: 10px; padding: 14px; margin-bottom: 14px; border: 1px solid #334155; }
+        .readiness-bar-wrap { height: 10px; background: #334155; border-radius: 5px; margin: 10px 0; overflow: hidden; }
+        .readiness-bar-fill { height: 100%; border-radius: 5px; transition: width 0.5s; }
+
+        /* ===== DIFFICULTY BADGE ===== */
+        .diff-badge { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: bold; margin-left: 6px; }
+        .diff-easy { background: rgba(16,185,129,0.2); color: var(--success); }
+        .diff-medium { background: rgba(245,158,11,0.2); color: var(--warn); }
+        .diff-hard { background: rgba(239,68,68,0.2); color: var(--danger); }
+
+        .section-divider { border: none; border-top: 1px solid #334155; margin: 16px 0; }
     </style>
 </head>
 <body>
 
+<!-- ========== SIDEBAR ========== -->
 <aside class="sidebar">
-    <h2><i class="fas fa-brain"></i> Academic AI v4</h2>
+    <h2><i class="fas fa-brain"></i> Academic AI v5</h2>
+
     <div class="form-group">
-        <label>과목명</label><input type="text" id="subject" placeholder="과목명 입력">
-        
+        <label>과목명</label>
+        <input type="text" id="subject" placeholder="과목명 입력">
+
         <label>유형 선택</label>
         <select id="task_type">
             <option value="exam">시험 (Exam)</option>
             <option value="assignment">과제 (Assignment)</option>
         </select>
 
-        <label>마감일/시험일</label><input type="date" id="deadline">
-        
+        <label>마감일 / 시험일</label>
+        <input type="date" id="deadline">
+
         <label>공부 스타일</label>
         <select id="style">
             <option value="normal">기본 (차근차근)</option>
             <option value="blitz">벼락치기 (빨간색 & 타이트한 일정)</option>
         </select>
 
+        <label>난이도 설정 <span class="diff-badge diff-medium">NEW</span></label>
+        <select id="difficulty">
+            <option value="easy">하 (쉬움) - 분량 x0.9</option>
+            <option value="medium" selected>중 (보통) - 기본</option>
+            <option value="hard">상 (어려움) - 분량 x1.2 (여유 확보)</option>
+        </select>
+
         <label>전체 분량 (페이지 또는 단원 수)</label>
         <input type="number" id="total_units" placeholder="숫자만 입력 (예: 200)">
+
+        <label>하루 가능 학습 시간 (시간) <span class="diff-badge diff-medium">NEW</span></label>
+        <input type="number" id="daily_hours" placeholder="예: 3 (시간 기반 일정 생성)" min="0.5" max="16" step="0.5">
 
         <label>시험 범위 상세 (기록 유지됨)</label>
         <textarea id="exam_range" placeholder="예: 1~5단원, 연습문제 전체" rows="2"></textarea>
@@ -82,51 +192,161 @@
 
         <label>휴무일 설정</label>
         <input type="date" id="off_day_input">
-        <button onclick="addOffDay()" style="width:100%; margin-bottom:5px; background:#334155; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer;">휴무일 추가</button>
-        <div id="off_days_list" style="font-size:0.7rem; color:var(--primary); margin-bottom:10px;"></div>
+        <button class="btn btn-secondary" onclick="addOffDay()">+ 휴무일 추가</button>
+        <div id="off_days_list" style="font-size:0.72rem; color:var(--primary); margin-bottom:8px;"></div>
 
-        <button onclick="addPlan()" style="width:100%; padding:15px; background:var(--primary); font-weight:bold; border-radius:8px; cursor:pointer; color:black; border:none;">전략 리포트 생성</button>
+        <button class="btn btn-primary" onclick="addPlan()">전략 리포트 생성</button>
+    </div>
+
+    <!-- 전체 요약 -->
+    <div class="form-group" id="sidebar-summary" style="display:none;">
+        <label>전체 과목 요약</label>
+        <div id="sidebar-summary-body" style="font-size:0.82rem; color:#94a3b8;"></div>
     </div>
 </aside>
 
+<!-- ========== MAIN ========== -->
 <main class="main-content">
+    <div class="main-header">
+        <h1><i class="fas fa-graduation-cap" style="color:var(--primary); margin-right:8px;"></i>Academic Strategist Dashboard</h1>
+        <div class="global-stats" id="global-stats"></div>
+    </div>
     <div id="dashboard" class="dashboard-grid"></div>
 </main>
 
+<!-- ========== MAIN MODAL ========== -->
 <div id="modal" class="modal">
     <div class="modal-content">
-        <div class="modal-left" id="modal-info">
-            </div>
+
+        <!-- LEFT: Plan Info -->
+        <div class="modal-left" id="modal-info"></div>
+
+        <!-- RIGHT: Tabs -->
         <div class="modal-right">
-            <div id="chat-box"></div>
-            <div style="padding:20px; border-top:1px solid #334155;">
-                <label style="color:var(--ai)">학습 기록 업데이트</label>
-                <textarea id="user-record" placeholder="오늘 어디까지 공부했나요? (예: 45페이지 완료)" rows="3" style="margin-top:10px;"></textarea>
-                <button onclick="updateWithAI()" style="width:100%; background:var(--ai); color:white; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;">기록 기반 계획 재설정</button>
+            <div class="tab-bar">
+                <div class="tab active" onclick="switchTab('tab-chat')">AI 어시스턴트</div>
+                <div class="tab" onclick="switchTab('tab-timer')">포모도로 타이머</div>
+                <div class="tab" onclick="switchTab('tab-log')">학습 이력 로그</div>
+            </div>
+
+            <!-- TAB: Chat -->
+            <div id="tab-chat" class="tab-content active">
+                <div id="chat-box"></div>
+                <div style="padding:16px; border-top:1px solid #334155; flex-shrink:0;">
+                    <label style="color:var(--ai);">학습 기록 업데이트</label>
+                    <textarea id="user-record" placeholder="오늘 어디까지 공부했나요? (예: 45페이지 완료)" rows="3" style="margin-top:8px;"></textarea>
+                    <button onclick="updateWithAI()" style="width:100%; background:var(--ai); color:white; border:none; padding:11px; border-radius:8px; cursor:pointer; font-weight:bold;">기록 기반 계획 재설정</button>
+                </div>
+            </div>
+
+            <!-- TAB: Pomodoro Timer -->
+            <div id="tab-timer" class="tab-content" style="padding:20px;">
+                <div class="timer-panel">
+                    <div class="timer-label" id="timer-label">집중 세션 - 25분</div>
+                    <div class="timer-display" id="timer-display">25:00</div>
+                    <div class="timer-progress">
+                        <div class="timer-fill" id="timer-fill" style="width:100%;"></div>
+                    </div>
+                    <div class="session-counter" id="session-counter">완료 세션: 0 / 오늘 목표: 4</div>
+                    <div class="timer-btns" style="margin-top:16px;">
+                        <button class="timer-btn" style="background:var(--primary); color:#020617;" onclick="startTimer()">시작</button>
+                        <button class="timer-btn" style="background:#334155; color:white;" onclick="pauseTimer()">일시정지</button>
+                        <button class="timer-btn" style="background:#334155; color:white;" onclick="resetTimer()">초기화</button>
+                    </div>
+                    <div style="margin-top:20px; display:flex; gap:8px; justify-content:center;">
+                        <button class="timer-btn" style="background:#1e293b; color:#94a3b8; font-size:0.78rem;" onclick="setTimerMode('focus')">집중 25분</button>
+                        <button class="timer-btn" style="background:#1e293b; color:#94a3b8; font-size:0.78rem;" onclick="setTimerMode('short')">짧은 휴식 5분</button>
+                        <button class="timer-btn" style="background:#1e293b; color:#94a3b8; font-size:0.78rem;" onclick="setTimerMode('long')">긴 휴식 15분</button>
+                    </div>
+                    <hr class="section-divider">
+                    <div style="font-size:0.8rem; color:#64748b; text-align:left;">
+                        <strong style="color:#94a3b8;">포모도로 기법이란?</strong><br>
+                        25분 집중 → 5분 휴식을 반복합니다. 4세트 완료 후 15분 긴 휴식을 취하세요. 
+                        집중력과 장기 기억을 동시에 향상시키는 검증된 학습법입니다.
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: History Log -->
+            <div id="tab-log" class="tab-content" style="padding:16px; overflow-y:auto;">
+                <div style="font-size:0.82rem; color:#94a3b8; margin-bottom:12px;">모든 학습 업데이트 기록이 저장됩니다.</div>
+                <div id="log-list"></div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- ========== DETAIL POPUP (일정 클릭시 세부 전략) ========== -->
+<div id="detail-popup" class="detail-popup">
+    <div class="detail-popup-content">
+        <button class="close-btn" onclick="closeDetailPopup()">&times;</button>
+        <h3 id="dp-title">세부 학습 전략</h3>
+        <div id="dp-body"></div>
+        <hr class="section-divider">
+        <label style="color:var(--warn); font-size:0.78rem;">이날 메모 (저장됨)</label>
+        <textarea class="memo-input" id="dp-memo" rows="3" placeholder="이 날 공부하면서 느낀 점, 어려운 부분 등을 기록하세요..."></textarea>
+        <button onclick="saveMemo()" style="margin-top:10px; width:100%; background:var(--success); color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold;">메모 저장</button>
+    </div>
+</div>
+
 <script>
-    let plans = JSON.parse(localStorage.getItem('ai_academic_v4')) || [];
+    let plans = JSON.parse(localStorage.getItem('ai_academic_v5')) || [];
     let tempOffDays = [];
     let currentId = null;
+    let currentDetailDate = null;
 
+    // ===== TIMER STATE =====
+    let timerInterval = null;
+    let timerRunning = false;
+    let timerSeconds = 25 * 60;
+    let timerTotal = 25 * 60;
+    let timerMode = 'focus';
+    let pomodoroSessions = parseInt(localStorage.getItem('pomo_sessions_today') || '0');
+    const pomodoroDate = localStorage.getItem('pomo_date') || '';
+    const todayDateStr = new Date().toISOString().split('T')[0];
+    if (pomodoroDate !== todayDateStr) {
+        pomodoroSessions = 0;
+        localStorage.setItem('pomo_sessions_today', '0');
+        localStorage.setItem('pomo_date', todayDateStr);
+    }
+
+    // ===== STUDY STRATEGY TEMPLATES =====
+    const studyStrategies = {
+        easy: {
+            approach: "여유롭게 개념 이해 중심으로 학습하세요. 빠르게 훑고 핵심 키워드를 정리하면 충분합니다.",
+            method: ["능동적 읽기: 소제목 먼저 보고 내용 예측", "핵심 개념에 형광펜 표시 후 자신의 말로 요약", "각 단원 말미 연습문제로 이해 확인"],
+            time: ["1~2 포모도로(25분씩)로 충분", "마지막 10분은 오늘 배운 내용 요약 작성"]
+        },
+        medium: {
+            approach: "체계적인 구조 이해와 반복 학습을 병행하세요. 개념 → 예시 → 문제 순으로 접근합니다.",
+            method: ["코넬 노트 활용: 왼쪽 키워드, 오른쪽 설명, 하단 요약", "배운 내용을 바탕으로 스스로 문제 출제해보기", "2회독: 1회독 빠르게 전체 훑기, 2회독 핵심 깊이 파기"],
+            time: ["3 포모도로 집중 학습", "1 포모도로는 복습 및 문제풀이 전용"]
+        },
+        hard: {
+            approach: "깊이 있는 이해가 필요합니다. 무조건 외우는 것보다 '왜?'를 이해하는 데 집중하세요.",
+            method: ["파인만 기법: 배운 내용을 초등학생에게 설명하듯 쓰기", "개념 맵(마인드맵) 작성으로 연결고리 파악", "오답 노트: 틀린 문제 원인 분석 및 패턴 파악", "동료나 AI에게 설명하며 이해도 점검"],
+            time: ["4~5 포모도로로 집중도 높이기", "중간 포모도로 하나는 반드시 능동적 회상(Active Recall) 전용"]
+        }
+    };
+
+    // ===== OFF DAY =====
     function addOffDay() {
         const val = document.getElementById('off_day_input').value;
-        if(val && !tempOffDays.includes(val)) {
+        if (val && !tempOffDays.includes(val)) {
             tempOffDays.push(val);
             document.getElementById('off_days_list').innerText = "휴무: " + tempOffDays.join(', ');
         }
     }
 
+    // ===== ADD PLAN =====
     function addPlan() {
-        const subject = document.getElementById('subject').value;
+        const subject = document.getElementById('subject').value.trim();
         const deadline = document.getElementById('deadline').value;
         const totalUnits = parseInt(document.getElementById('total_units').value);
+        if (!subject || !deadline || !totalUnits) return alert("필수 정보를 모두 입력해주세요.");
 
-        if(!subject || !deadline || !totalUnits) return alert("필수 정보를 모두 입력해주세요.");
+        const difficulty = document.getElementById('difficulty').value;
+        const dailyHours = parseFloat(document.getElementById('daily_hours').value) || 0;
 
         const plan = {
             id: Date.now(),
@@ -134,31 +354,43 @@
             completedUnit: 0,
             taskType: document.getElementById('task_type').value,
             style: document.getElementById('style').value,
+            difficulty,
+            dailyHours,
             examRange: document.getElementById('exam_range').value,
             examInfo: document.getElementById('exam_info').value,
             offDays: [...tempOffDays],
             progress: 0,
             isEmergency: false,
-            dailySchedule: generateSchedule(deadline, tempOffDays, totalUnits, 0),
-            chatHistory: []
+            dailySchedule: generateSchedule(deadline, tempOffDays, totalUnits, 0, difficulty),
+            chatHistory: [],
+            historyLog: [],
+            memos: {}
         };
+
         plans.push(plan);
         tempOffDays = [];
         document.getElementById('off_days_list').innerText = "";
+        ['subject','deadline','total_units','daily_hours','exam_range','exam_info'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.value = '';
+        });
         save();
+        addLog(plan.id, 'sys', `과목 "${subject}" 등록 완료. 총 ${totalUnits} 분량, 마감일 ${deadline}.`);
     }
 
-    function generateSchedule(deadline, offDays, totalAmount, startUnit) {
+    // ===== GENERATE SCHEDULE =====
+    function generateSchedule(deadline, offDays, totalAmount, startUnit, difficulty) {
+        difficulty = difficulty || 'medium';
         let schedule = [];
         let curr = new Date(); curr.setHours(0,0,0,0);
         const end = new Date(deadline);
         const todayStr = new Date().toISOString().split('T')[0];
-        
+
         let studyDays = [];
         let temp = new Date(curr);
-        while(temp <= end) {
+        while (temp <= end) {
             const dStr = temp.toISOString().split('T')[0];
-            if(!offDays.includes(dStr) && dStr >= todayStr) studyDays.push(dStr);
+            if (!offDays.includes(dStr) && dStr >= todayStr) studyDays.push(dStr);
             temp.setDate(temp.getDate() + 1);
         }
 
@@ -167,29 +399,75 @@
         let pointer = startUnit;
 
         temp = new Date(curr);
-        while(temp <= end) {
+        while (temp <= end) {
             const dStr = temp.toISOString().split('T')[0];
             let task = "";
-            if (offDays.includes(dStr)) task = "🛋️ 휴식 및 재충전";
-            else if (dStr < todayStr) task = "✅ 이전 학습 완료";
-            else {
+            let detail = {};
+            if (offDays.includes(dStr)) {
+                task = "휴식 및 재충전";
+            } else if (dStr < todayStr) {
+                task = "이전 학습 완료";
+            } else {
                 if (pointer < totalAmount) {
                     let next = Math.min(pointer + perDay, totalAmount);
-                    task = `📚 범위: ${pointer + 1} ~ ${next} 집중 학습`;
+                    task = `범위: ${pointer + 1} ~ ${next} 집중 학습`;
+                    detail = { from: pointer + 1, to: next, amount: next - pointer };
                     pointer = next;
-                } else task = "🔍 전체 복습 및 문제 풀이";
+                } else {
+                    task = "전체 복습 및 문제 풀이";
+                    detail = { review: true };
+                }
             }
-            schedule.push({ date: dStr, task, isDone: dStr < todayStr, isOff: offDays.includes(dStr) });
+            schedule.push({
+                date: dStr,
+                task,
+                detail,
+                isDone: dStr < todayStr,
+                isOff: offDays.includes(dStr),
+                memo: ''
+            });
             temp.setDate(temp.getDate() + 1);
         }
         return schedule;
     }
 
+    // ===== SAVE =====
     function save() {
-        localStorage.setItem('ai_academic_v4', JSON.stringify(plans));
+        localStorage.setItem('ai_academic_v5', JSON.stringify(plans));
         render();
+        renderSidebarSummary();
     }
 
+    // ===== ADD LOG =====
+    function addLog(planId, type, text) {
+        const plan = plans.find(p => p.id === planId);
+        if (!plan) return;
+        if (!plan.historyLog) plan.historyLog = [];
+        plan.historyLog.unshift({ time: new Date().toLocaleString('ko-KR'), type, text });
+        if (plan.historyLog.length > 50) plan.historyLog.pop();
+    }
+
+    // ===== READINESS CALC =====
+    function calcReadiness(plan) {
+        if (plan.totalUnits === 0) return { pct: 0, grade: 'F', color: 'var(--danger)' };
+        const daysLeft = Math.max(1, Math.ceil((new Date(plan.deadline) - new Date()) / (1000*60*60*24)));
+        const totalDays = plan.dailySchedule.length || 1;
+        const daysPassed = totalDays - daysLeft;
+        const expected = (daysPassed / totalDays) * plan.totalUnits;
+        const actual = plan.completedUnit;
+        let pct = Math.min(100, Math.round((actual / plan.totalUnits) * 100));
+
+        // Bonus: ahead of schedule
+        let grade, color;
+        if (pct >= 90) { grade = 'A'; color = 'var(--success)'; }
+        else if (pct >= 70) { grade = 'B'; color = 'var(--primary)'; }
+        else if (pct >= 50) { grade = 'C'; color = 'var(--warn)'; }
+        else if (pct >= 30) { grade = 'D'; color = 'var(--danger)'; }
+        else { grade = 'F'; color = '#fca5a5'; }
+        return { pct, grade, color };
+    }
+
+    // ===== RENDER DASHBOARD =====
     function render() {
         const db = document.getElementById('dashboard');
         db.innerHTML = '';
@@ -198,105 +476,448 @@
             const card = document.createElement('div');
             const isBlitz = p.style === 'blitz';
             const isEmerg = diff <= 3 || p.isEmergency;
+            const r = calcReadiness(p);
+            const diffMap = { easy: 'diff-easy', medium: 'diff-medium', hard: 'diff-hard' };
+            const diffLabel = { easy: '하', medium: '중', hard: '상' };
 
             card.className = `card ${isBlitz ? 'blitz-mode' : ''} ${isEmerg ? 'emergency' : ''}`;
             card.onclick = () => openModal(p.id);
             card.innerHTML = `
-                ${isEmerg ? '<div class="emergency-badge">🚨 비상 상황</div>' : ''}
-                <span style="font-size:0.7rem; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">${p.taskType.toUpperCase()}</span>
-                <h3 style="margin: 10px 0 5px 0;">${p.subject}</h3>
-                <p style="font-size:0.8rem; color:#94a3b8; margin:0;">D-${diff < 0 ? 'Pass' : diff} | 진도: ${p.completedUnit}/${p.totalUnits}</p>
-                <div style="height:6px; background:#020617; border-radius:3px; margin-top:10px;">
-                    <div style="width:${(p.completedUnit/p.totalUnits)*100}%; height:100%; background:${isBlitz ? 'var(--danger)' : 'var(--primary)'}; border-radius:3px; transition:0.5s;"></div>
+                ${isEmerg ? '<div class="emergency-badge">EMERGENCY</div>' : ''}
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="font-size:0.68rem; background:rgba(255,255,255,0.1); padding:2px 7px; border-radius:4px;">${p.taskType.toUpperCase()}</span>
+                    <span class="diff-badge ${diffMap[p.difficulty||'medium']}">난이도 ${diffLabel[p.difficulty||'medium']}</span>
                 </div>
+                <h3 style="margin: 10px 0 4px 0; font-size:1.05rem;">${p.subject}</h3>
+                <p style="font-size:0.78rem; color:#94a3b8; margin:0 0 6px;">
+                    ${diff < 0 ? 'D+' + Math.abs(diff) : 'D-' + diff} | 진도: ${p.completedUnit}/${p.totalUnits} (${r.pct}%) | 준비도: <span style="color:${r.color}; font-weight:bold;">${r.grade}등급</span>
+                </p>
+                ${p.dailyHours ? `<p style="font-size:0.75rem; color:#64748b; margin:0 0 8px;">하루 ${p.dailyHours}시간 기준</p>` : ''}
+                <div class="prog-bar">
+                    <div class="prog-fill" style="width:${r.pct}%; background:${isBlitz ? 'var(--danger)' : r.color};"></div>
+                </div>
+                <div class="readiness-badge grade-${r.grade}">${r.grade}</div>
             `;
             db.appendChild(card);
         });
+
+        // Global stats
+        const gs = document.getElementById('global-stats');
+        const total = plans.length;
+        const emergCount = plans.filter(p => Math.ceil((new Date(p.deadline) - new Date()) / (1000*60*60*24)) <= 3 || p.isEmergency).length;
+        gs.innerHTML = `
+            <div class="gstat">총 과목 <strong>${total}</strong></div>
+            <div class="gstat">비상 <strong style="color:var(--danger);">${emergCount}</strong></div>
+        `;
     }
 
+    // ===== SIDEBAR SUMMARY =====
+    function renderSidebarSummary() {
+        const el = document.getElementById('sidebar-summary');
+        const body = document.getElementById('sidebar-summary-body');
+        if (plans.length === 0) { el.style.display = 'none'; return; }
+        el.style.display = 'block';
+        const lines = plans.map(p => {
+            const d = Math.ceil((new Date(p.deadline) - new Date()) / (1000*60*60*24));
+            const r = calcReadiness(p);
+            return `<div style="margin-bottom:6px; padding-bottom:6px; border-bottom:1px solid #1e293b;">
+                <strong style="color:#f8fafc;">${p.subject}</strong>
+                <span class="diff-badge grade-${r.grade}" style="font-size:0.68rem;">${r.grade}</span><br>
+                D-${d < 0 ? Math.abs(d)+'지남' : d} &nbsp; ${r.pct}% 완료
+            </div>`;
+        });
+        body.innerHTML = lines.join('');
+    }
+
+    // ===== OPEN MODAL =====
     function openModal(id) {
         currentId = id;
         const plan = plans.find(p => p.id === id);
         const info = document.getElementById('modal-info');
         const todayStr = new Date().toISOString().split('T')[0];
-        
-        // 기존 시험 정보와 범위를 상단에 그대로 유지
-        info.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:start;">
-                <h2>${plan.subject} <small style="color:var(--primary)">(${plan.style === 'blitz' ? '벼락치기' : '일반'})</small></h2>
-                <button onclick="deletePlan(${plan.id})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-weight:bold;">과목 삭제</button>
-            </div>
-            
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin:20px 0;">
-                <div class="form-group">
-                    <label>📍 등록된 시험 범위</label>
-                    <div style="font-size:0.9rem; white-space:pre-wrap;">${plan.examRange || '미지정'}</div>
+        const r = calcReadiness(plan);
+        const diff = Math.ceil((new Date(plan.deadline) - new Date()) / (1000*60*60*24));
+        const diffMap = { easy: 'diff-easy', medium: 'diff-medium', hard: 'diff-hard' };
+        const diffLabel = { easy: '하 (쉬움)', medium: '중 (보통)', hard: '상 (어려움)' };
+
+        // Today's schedule item
+        const todayItem = plan.dailySchedule.find(s => s.date === todayStr);
+        const doneDays = plan.dailySchedule.filter(s => s.isDone && !s.isOff).length;
+        const totalStudyDays = plan.dailySchedule.filter(s => !s.isOff).length;
+        const avgPerDay = totalStudyDays > 0 ? (plan.totalUnits / totalStudyDays).toFixed(1) : 0;
+        const remainUnits = plan.totalUnits - plan.completedUnit;
+        const remainDays = plan.dailySchedule.filter(s => !s.isDone && !s.isOff && s.date >= todayStr).length;
+        const dailyBurden = remainDays > 0 ? Math.ceil(remainUnits / remainDays) : 0;
+        const expectedFinish = remainDays > 0
+            ? plan.dailySchedule.filter(s => !s.isOff && !s.isDone)[remainDays - 1]?.date || plan.deadline
+            : plan.deadline;
+
+        // Today time blocks
+        const strat = studyStrategies[plan.difficulty || 'medium'];
+        let todayBlocksHtml = '';
+        if (todayItem && !todayItem.isOff && !todayItem.isDone) {
+            const h = plan.dailyHours || 2;
+            const pomos = Math.max(1, Math.round(h * 60 / 30));
+            todayBlocksHtml = `
+                <div class="today-mission">
+                    <h4>오늘의 상세 미션 - ${todayStr}</h4>
+                    <div class="time-block"><span class="time-label">목표 범위</span><span>${todayItem.task}</span></div>
+                    <div class="time-block"><span class="time-label">오늘 목표량</span><span>${dailyBurden > 0 ? dailyBurden + ' 단위' : '전체 복습'}</span></div>
+                    <div class="time-block"><span class="time-label">권장 시간</span><span>${h > 0 ? h + '시간 / 포모도로 약 ' + pomos + '회' : '미설정 (타이머 탭 활용 권장)'}</span></div>
+                    <div class="time-block"><span class="time-label">학습 접근법</span><span style="color:#cbd5e1;">${strat.approach}</span></div>
+                    ${todayItem.memo ? `<div class="time-block"><span class="time-label">내 메모</span><span style="color:var(--warn); font-style:italic;">${todayItem.memo}</span></div>` : ''}
                 </div>
-                <div class="form-group">
-                    <label>📜 등록된 시험 정보</label>
-                    <div style="font-size:0.9rem; white-space:pre-wrap;">${plan.examInfo || '미지정'}</div>
+            `;
+        }
+
+        info.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:16px;">
+                <div>
+                    <h2 style="margin:0 0 4px;">${plan.subject}
+                        <small style="color:var(--primary); font-size:0.7em;">(${plan.style === 'blitz' ? '벼락치기' : '일반'})</small>
+                    </h2>
+                    <span class="diff-badge ${diffMap[plan.difficulty||'medium']}">${diffLabel[plan.difficulty||'medium']}</span>
+                </div>
+                <button onclick="deletePlan(${plan.id})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-weight:bold; font-size:0.85rem;">과목 삭제</button>
+            </div>
+
+            <!-- STATS ROW -->
+            <div class="stat-row">
+                <div class="stat-box"><div class="sv">D-${diff < 0 ? Math.abs(diff)+'P' : diff}</div><div class="sk">마감까지</div></div>
+                <div class="stat-box"><div class="sv" style="color:${r.color};">${r.pct}%</div><div class="sk">진도율</div></div>
+                <div class="stat-box"><div class="sv">${dailyBurden}</div><div class="sk">오늘 필요 분량</div></div>
+                <div class="stat-box"><div class="sv" style="color:${r.color};">${r.grade}</div><div class="sk">준비도 등급</div></div>
+            </div>
+
+            <!-- READINESS BAR -->
+            <div class="readiness-panel">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.8rem; color:#94a3b8;">시험 준비도</span>
+                    <span style="font-size:0.8rem; font-weight:bold; color:${r.color};">${r.pct}% — ${r.grade}등급</span>
+                </div>
+                <div class="readiness-bar-wrap">
+                    <div class="readiness-bar-fill" style="width:${r.pct}%; background:${r.color};"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:#64748b;">
+                    <span>완료: ${plan.completedUnit}/${plan.totalUnits}</span>
+                    <span>일평균: ${avgPerDay}단위</span>
+                    <span>남은 학습일: ${remainDays}일</span>
+                    <span>하루 필요량: ${dailyBurden}단위</span>
                 </div>
             </div>
 
-            <h4>📅 AI 실시간 조정 계획</h4>
-            <div id="schedule-list">
-                ${plan.dailySchedule.map(s => `
-                    <div class="schedule-item ${s.date === todayStr ? 'today' : ''} ${s.isDone ? 'done' : ''}" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span><strong>${s.date === todayStr ? '⭐ 오늘' : s.date}</strong>: ${s.task}</span>
-                        ${!s.isOff ? `<input type="checkbox" ${s.isDone?'checked':''} onchange="toggleTask('${s.date}')">` : ''}
+            <!-- TODAY MISSION -->
+            ${todayBlocksHtml}
+
+            <!-- EXAM INFO GRID -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
+                <div class="form-group" style="margin:0;">
+                    <label>등록된 시험 범위</label>
+                    <div style="font-size:0.85rem; white-space:pre-wrap; color:#cbd5e1;">${plan.examRange || '미지정'}</div>
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label>등록된 시험 정보</label>
+                    <div style="font-size:0.85rem; white-space:pre-wrap; color:#cbd5e1;">${plan.examInfo || '미지정'}</div>
+                </div>
+            </div>
+
+            <!-- STUDY STRATEGY SUMMARY -->
+            <details style="margin-bottom:16px;">
+                <summary style="cursor:pointer; color:var(--warn); font-size:0.85rem; font-weight:bold; padding:8px 0;">AI 추천 학습 전략 상세 보기 (난이도 ${diffLabel[plan.difficulty||'medium']})</summary>
+                <div style="margin-top:10px;">
+                    ${strat.method.map(m => `
+                        <div style="background:#0f172a; border-radius:7px; padding:10px 13px; margin-bottom:7px; border-left:3px solid var(--warn); font-size:0.84rem; color:#cbd5e1;">${m}</div>
+                    `).join('')}
+                    <div style="background:#0f172a; border-radius:7px; padding:10px 13px; margin-bottom:7px; border-left:3px solid var(--primary); font-size:0.84rem; color:#cbd5e1;">
+                        <strong style="color:var(--primary);">시간 배분:</strong><br>
+                        ${strat.time.join('<br>')}
                     </div>
-                `).join('')}
+                </div>
+            </details>
+
+            <!-- SCHEDULE LIST -->
+            <h4 style="margin:0 0 10px; font-size:0.9rem; color:#94a3b8;">AI 실시간 조정 계획 <span style="color:#64748b; font-weight:normal; font-size:0.78rem;">(항목 클릭시 세부 전략 열람 가능)</span></h4>
+            <div id="schedule-list">
+                ${plan.dailySchedule.map(s => {
+                    const hasMemo = s.memo && s.memo.trim().length > 0;
+                    return `
+                    <div class="schedule-item ${s.date === todayStr ? 'today' : ''} ${s.isDone ? 'done' : ''} ${s.isOff ? 'off' : ''}"
+                         onclick="${s.isOff ? '' : `openDetailPopup('${s.date}')`}">
+                        <div class="si-row">
+                            <div>
+                                <strong>${s.date === todayStr ? '[TODAY] ' + s.date : s.date}</strong>
+                                <div class="si-task">${s.task}</div>
+                                ${hasMemo ? `<div class="si-memo">"${s.memo}"</div>` : ''}
+                            </div>
+                            <div class="si-actions" onclick="event.stopPropagation();">
+                                ${!s.isOff ? `<input type="checkbox" ${s.isDone ? 'checked' : ''} title="완료 표시" onchange="toggleTask('${s.date}')">` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `}).join('')}
             </div>
         `;
 
+        // Chat
         const chatBox = document.getElementById('chat-box');
-        chatBox.innerHTML = '<div class="bubble ai">학습 기록을 분석하여 왼쪽의 계획표를 실시간으로 재구성합니다.</div>';
-        plan.chatHistory.slice(-3).forEach(c => {
+        chatBox.innerHTML = `<div class="bubble ai">학습 기록을 분석하여 왼쪽의 계획표를 실시간으로 재구성합니다.\n\n현재 준비도: ${r.grade}등급 (${r.pct}%) | 남은 분량: ${remainUnits}단위 | 하루 목표: ${dailyBurden}단위\n\n아래에 오늘 공부한 내용을 입력하면 계획이 재조정됩니다.</div>`;
+        (plan.chatHistory || []).slice(-4).forEach(c => {
             const div = document.createElement('div');
             div.className = `bubble ${c.role}`;
             div.innerText = c.text;
             chatBox.appendChild(div);
         });
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Log
+        renderLogTab(plan);
+
         document.getElementById('modal').style.display = "block";
+        updateTimerDisplay();
     }
 
+    // ===== RENDER LOG TAB =====
+    function renderLogTab(plan) {
+        const logList = document.getElementById('log-list');
+        const logs = plan.historyLog || [];
+        if (logs.length === 0) {
+            logList.innerHTML = '<div style="color:#64748b; font-size:0.83rem; text-align:center; padding:20px;">아직 기록이 없습니다.</div>';
+            return;
+        }
+        logList.innerHTML = logs.map(l => `
+            <div class="log-item log-${l.type}">
+                <div class="log-time">${l.time}</div>
+                <div class="log-body">${l.text}</div>
+            </div>
+        `).join('');
+    }
+
+    // ===== TOGGLE TAB =====
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        const idx = { 'tab-chat': 0, 'tab-timer': 1, 'tab-log': 2 };
+        document.querySelectorAll('.tab')[idx[tabId]].classList.add('active');
+    }
+
+    // ===== TOGGLE TASK =====
     function toggleTask(date) {
         const plan = plans.find(p => p.id === currentId);
         const t = plan.dailySchedule.find(s => s.date === date);
         t.isDone = !t.isDone;
+        const status = t.isDone ? '완료' : '미완료';
+        addLog(plan.id, t.isDone ? 'good' : 'warn', `${date} 일정 "${t.task}" - ${status} 처리`);
         save();
         openModal(currentId);
     }
 
+    // ===== OPEN DETAIL POPUP =====
+    function openDetailPopup(date) {
+        const plan = plans.find(p => p.id === currentId);
+        if (!plan) return;
+        const s = plan.dailySchedule.find(d => d.date === date);
+        if (!s || s.isOff) return;
+        currentDetailDate = date;
+
+        const strat = studyStrategies[plan.difficulty || 'medium'];
+        const dp = document.getElementById('detail-popup');
+        const dpTitle = document.getElementById('dp-title');
+        const dpBody = document.getElementById('dp-body');
+        const dpMemo = document.getElementById('dp-memo');
+
+        dpTitle.innerText = date + ' - 세부 학습 전략';
+        dpMemo.value = s.memo || '';
+
+        const isReview = s.detail && s.detail.review;
+        const rangeInfo = s.detail && s.detail.from
+            ? `${s.detail.from} ~ ${s.detail.to} (${s.detail.amount}단위)`
+            : '전체 복습';
+
+        dpBody.innerHTML = `
+            <div class="strategy-block">
+                <div class="s-title">오늘 학습 범위</div>
+                ${s.task}
+                ${s.detail && s.detail.amount ? `<br><span style="color:#64748b; font-size:0.82rem;">총 ${s.detail.amount}단위 학습 목표</span>` : ''}
+            </div>
+
+            ${!isReview ? `
+            <div class="strategy-block">
+                <div class="s-title">단계별 접근법 (난이도 기반)</div>
+                <div style="margin-bottom:6px;">${strat.approach}</div>
+                <ol style="margin:0; padding-left:18px; line-height:2;">
+                    ${strat.method.map(m => `<li style="font-size:0.84rem;">${m}</li>`).join('')}
+                </ol>
+            </div>
+            ` : `
+            <div class="strategy-block" style="border-left-color: var(--success);">
+                <div class="s-title">복습 전략</div>
+                <ol style="margin:0; padding-left:18px; line-height:2;">
+                    <li style="font-size:0.84rem;">전체 목차를 보고 주요 개념 떠올리기 (Active Recall)</li>
+                    <li style="font-size:0.84rem;">기억이 안 나는 부분만 책 펴서 확인</li>
+                    <li style="font-size:0.84rem;">예상 문제 직접 만들고 풀어보기</li>
+                    <li style="font-size:0.84rem;">오답 노트 최종 점검</li>
+                </ol>
+            </div>
+            `}
+
+            <div class="strategy-block" style="border-left-color: var(--warn);">
+                <div class="s-title">권장 시간 배분</div>
+                ${strat.time.map(t => `<div style="font-size:0.84rem; margin-bottom:4px;">- ${t}</div>`).join('')}
+            </div>
+
+            <div class="strategy-block" style="border-left-color: var(--ai);">
+                <div class="s-title">집중력 유지 팁</div>
+                <div style="font-size:0.84rem; line-height:1.7;">
+                    - 공부 전 10분: 오늘 배울 내용 훑어보기 (뇌 준비 단계)<br>
+                    - 핸드폰은 다른 방 or 앱 잠금<br>
+                    - 헤드폰 + 백색 소음/로파이 음악 추천<br>
+                    - 목표: 완벽이 아닌 "이해" — 완벽한 공부는 없습니다
+                </div>
+            </div>
+        `;
+
+        dp.style.display = 'block';
+    }
+
+    function closeDetailPopup() {
+        document.getElementById('detail-popup').style.display = 'none';
+        currentDetailDate = null;
+    }
+
+    // ===== SAVE MEMO =====
+    function saveMemo() {
+        if (!currentDetailDate) return;
+        const plan = plans.find(p => p.id === currentId);
+        const s = plan.dailySchedule.find(d => d.date === currentDetailDate);
+        const memoText = document.getElementById('dp-memo').value.trim();
+        s.memo = memoText;
+        addLog(plan.id, 'sys', `${currentDetailDate} 메모 저장: "${memoText}"`);
+        save();
+        closeDetailPopup();
+        openModal(currentId);
+    }
+
+    // ===== UPDATE WITH AI =====
     function updateWithAI() {
-        const record = document.getElementById('user-record').value;
+        const record = document.getElementById('user-record').value.trim();
         const matched = record.match(/\d+/);
-        if(!matched) return alert("진도 숫자(예: 50페이지)를 포함해주세요!");
+        if (!matched) return alert("진도 숫자(예: 50페이지)를 포함해주세요!");
 
         const plan = plans.find(p => p.id === currentId);
         const completed = parseInt(matched[0]);
-        
-        // 권장 진도 대비 비상 여부 체크
         const todayIdx = plan.dailySchedule.findIndex(s => s.date === new Date().toISOString().split('T')[0]);
-        const recommended = (plan.totalUnits / plan.dailySchedule.length) * (todayIdx + 1);
+        const recommended = (plan.totalUnits / (plan.dailySchedule.length || 1)) * (todayIdx + 1);
 
+        const wasEmerg = plan.isEmergency;
         plan.completedUnit = completed;
-        plan.isEmergency = completed < recommended; 
-        plan.dailySchedule = generateSchedule(plan.deadline, plan.offDays, plan.totalUnits, completed);
+        plan.isEmergency = completed < recommended;
+        plan.dailySchedule = generateSchedule(plan.deadline, plan.offDays, plan.totalUnits, completed, plan.difficulty);
 
-        const msg = plan.isEmergency 
-            ? `⚠️ 진도가 지연되어 비상 모드로 전환합니다. 남은 분량을 내일부터 타이트하게 재분배했습니다.`
-            : `✅ 아주 좋습니다! 남은 분량을 효율적으로 다시 쪼개어 계획표에 반영했습니다.`;
+        const r = calcReadiness(plan);
+        const remainUnits = plan.totalUnits - completed;
+        const remainDays = plan.dailySchedule.filter(s => !s.isDone && !s.isOff && s.date >= new Date().toISOString().split('T')[0]).length;
+        const newDailyBurden = remainDays > 0 ? Math.ceil(remainUnits / remainDays) : 0;
 
-        plan.chatHistory.push({role:'user', text: record}, {role:'ai', text: msg});
+        let msg = '';
+        if (plan.isEmergency) {
+            msg = `진도가 지연되었습니다. 비상 모드 전환.\n\n` +
+                  `현재 진도: ${completed}/${plan.totalUnits} (${r.pct}%)\n` +
+                  `권장 진도: ${Math.round(recommended)}/${plan.totalUnits}\n` +
+                  `준비도 등급: ${r.grade}\n\n` +
+                  `남은 분량 ${remainUnits}단위를 ${remainDays}일에 재분배했습니다.\n` +
+                  `하루 목표: 약 ${newDailyBurden}단위\n\n` +
+                  `지금부터 집중하면 충분히 따라잡을 수 있습니다. 파이팅!`;
+        } else {
+            msg = `훌륭합니다! 일정보다 앞서가고 있습니다.\n\n` +
+                  `현재 진도: ${completed}/${plan.totalUnits} (${r.pct}%)\n` +
+                  `준비도 등급: ${r.grade}\n\n` +
+                  `남은 분량 ${remainUnits}단위를 ${remainDays}일에 여유롭게 재분배했습니다.\n` +
+                  `하루 목표: 약 ${newDailyBurden}단위\n\n` +
+                  `이 페이스를 유지하면 시험 전날은 가볍게 복습만 하면 됩니다!`;
+        }
+
+        plan.chatHistory.push({ role: 'user', text: record }, { role: 'ai', text: msg });
+        addLog(plan.id, plan.isEmergency ? 'danger' : 'good',
+            `진도 업데이트: ${completed}/${plan.totalUnits} (${r.pct}%) — ${plan.isEmergency ? '비상 모드' : '순조로움'} | 하루 목표: ${newDailyBurden}단위`);
+
         document.getElementById('user-record').value = '';
         save();
-        openModal(currentId); 
+        openModal(currentId);
     }
 
-    function deletePlan(id) { if(confirm("정말 삭제할까요?")) { plans = plans.filter(p=>p.id!==id); save(); document.getElementById('modal').style.display="none"; } }
-    window.onclick = e => { if(e.target.className === 'modal') e.target.style.display="none"; }
+    // ===== DELETE =====
+    function deletePlan(id) {
+        if (confirm("정말 삭제할까요?")) {
+            plans = plans.filter(p => p.id !== id);
+            save();
+            document.getElementById('modal').style.display = "none";
+        }
+    }
+
+    // ===== POMODORO TIMER =====
+    function setTimerMode(mode) {
+        timerMode = mode;
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; timerRunning = false; }
+        if (mode === 'focus') { timerSeconds = 25 * 60; timerTotal = 25 * 60; document.getElementById('timer-label').innerText = '집중 세션 - 25분'; }
+        else if (mode === 'short') { timerSeconds = 5 * 60; timerTotal = 5 * 60; document.getElementById('timer-label').innerText = '짧은 휴식 - 5분'; }
+        else if (mode === 'long') { timerSeconds = 15 * 60; timerTotal = 15 * 60; document.getElementById('timer-label').innerText = '긴 휴식 - 15분'; }
+        updateTimerDisplay();
+    }
+
+    function startTimer() {
+        if (timerRunning) return;
+        timerRunning = true;
+        timerInterval = setInterval(() => {
+            timerSeconds--;
+            updateTimerDisplay();
+            if (timerSeconds <= 0) {
+                clearInterval(timerInterval);
+                timerRunning = false;
+                if (timerMode === 'focus') {
+                    pomodoroSessions++;
+                    localStorage.setItem('pomo_sessions_today', pomodoroSessions.toString());
+                    localStorage.setItem('pomo_date', todayDateStr);
+                    const plan = plans.find(p => p.id === currentId);
+                    if (plan) addLog(plan.id, 'good', `포모도로 집중 세션 완료! (오늘 ${pomodoroSessions}회 완료)`);
+                    save();
+                    alert("집중 세션 완료! 잠깐 쉬세요.");
+                    setTimerMode('short');
+                } else {
+                    setTimerMode('focus');
+                }
+                updateTimerDisplay();
+            }
+        }, 1000);
+    }
+
+    function pauseTimer() {
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; timerRunning = false; }
+    }
+
+    function resetTimer() {
+        pauseTimer();
+        setTimerMode(timerMode);
+    }
+
+    function updateTimerDisplay() {
+        const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+        const s = (timerSeconds % 60).toString().padStart(2, '0');
+        document.getElementById('timer-display').innerText = `${m}:${s}`;
+        const pct = timerTotal > 0 ? (timerSeconds / timerTotal) * 100 : 100;
+        document.getElementById('timer-fill').style.width = pct + '%';
+        document.getElementById('session-counter').innerText = `완료 세션: ${pomodoroSessions} / 오늘 목표: 4`;
+    }
+
+    // ===== MODAL CLOSE =====
+    window.onclick = e => {
+        if (e.target.id === 'modal') e.target.style.display = "none";
+        if (e.target.id === 'detail-popup') { e.target.style.display = "none"; currentDetailDate = null; }
+    };
+
+    // ===== INIT =====
     render();
+    renderSidebarSummary();
 </script>
 </body>
 </html>
